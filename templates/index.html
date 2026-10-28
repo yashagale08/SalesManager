@@ -1,0 +1,739 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SalesManager | Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Chart.js and the data-labels plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+    <style>
+        /* Dashboard graph styles only */
+        .dashboard-charts-section {
+            margin-top: 24px;
+        }
+
+        .dashboard-charts-heading {
+            margin-bottom: 18px;
+        }
+
+        .dashboard-charts-heading h2 {
+            margin: 0 0 6px;
+            color: #f2f4ee;
+            font-size: 21px;
+        }
+
+        .dashboard-charts-heading p {
+            margin: 0;
+            color: #a1a69a;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .dashboard-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .dashboard-chart-card {
+            min-width: 0;
+            padding: 22px;
+            background: #222320;
+            border: 1px solid #373a33;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .dashboard-chart-card--wide {
+            grid-column: 1 / -1;
+        }
+
+        .dashboard-chart-card h3 {
+            margin: 0 0 6px;
+            color: #f2f4ee;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .dashboard-chart-description {
+            margin: 0 0 20px;
+            color: #a1a69a;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .dashboard-chart-visual {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+
+        .dashboard-chart-card--wide .dashboard-chart-visual {
+            height: 310px;
+        }
+
+        .dashboard-chart-visual canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .dashboard-chart-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            padding: 20px;
+            color: #a1a69a;
+            text-align: center;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .dashboard-chart-footer {
+            margin-top: 12px;
+            color: #a1a69a;
+            font-size: 11px;
+        }
+
+        @media (max-width: 850px) {
+            .dashboard-charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-chart-card--wide {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .dashboard-chart-card {
+                padding: 16px;
+            }
+
+            .dashboard-chart-visual,
+            .dashboard-chart-card--wide .dashboard-chart-visual {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <h2 class="brand">SalesManager</h2>
+
+        <p class="menu-label">MAIN MENU</p>
+
+        <a class="nav-link active" href="/">Dashboard</a>
+
+        <a class="nav-link"
+           href="{{ url_for('customers_page') }}">Customers</a>
+
+        <a class="nav-link"
+           href="{{ url_for('products_page') }}">Products</a>
+
+        <a class="nav-link"
+           href="{{ url_for('sales_page') }}">Sales &amp; Billing</a>
+
+        <a class="nav-link"
+           href="{{ url_for('sales_history_page') }}">Invoice History</a>
+
+        <a class="nav-link"
+           href="{{ url_for('payments_page') }}">Payments</a>
+
+        <a class="nav-link"
+           href="{{ url_for('reports_page') }}">Reports</a>
+
+        <div class="sidebar-bottom">
+            Your business, organized.
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">OVERVIEW</p>
+                <h1>Dashboard</h1>
+                <p class="muted">
+                    Welcome to your business management system.
+                </p>
+            </div>
+
+            <div class="db-status">
+                <span class="status-dot"></span>
+                Database: {{ database_status }}
+            </div>
+        </header>
+
+        <!-- WELCOME CARD -->
+        <section class="welcome-card">
+            <div>
+                <p class="eyebrow light">YOUR BUSINESS AT A GLANCE</p>
+                <h2>Manage your business with confidence.</h2>
+                <p>
+                    Keep customers, sales, products and payments
+                    in one place.
+                </p>
+            </div>
+
+            <div class="welcome-icon">SM</div>
+        </section>
+
+        <!-- EXISTING SUMMARY CARDS -->
+        <section class="stats-grid">
+
+            <article class="stat-card">
+                <p>Total Sales</p>
+                <h2>₹{{ "%.2f"|format(total_sales) }}</h2>
+                <span>Total value of saved invoices</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Customers</p>
+                <h2>{{ total_customers }}</h2>
+                <span>Customer records</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Outstanding Payments</p>
+                <h2>₹{{ "%.2f"|format(outstanding_payments) }}</h2>
+                <span>Amount still to be collected</span>
+            </article>
+
+            <article class="stat-card">
+                <p>Products</p>
+                <h2>{{ total_products }}</h2>
+                <span>Active products in your catalogue</span>
+            </article>
+
+        </section>
+
+        <!-- BUSINESS GRAPHS -->
+        <section class="dashboard-charts-section">
+
+            <div class="dashboard-charts-heading">
+                <h2>Business Insights</h2>
+                <p>
+                    Explore your sales performance and invoice
+                    payment status using live database records.
+                </p>
+            </div>
+
+            <div class="dashboard-charts-grid">
+
+                <!-- GRAPH 1: MONTHLY SALES -->
+                <article class="dashboard-chart-card">
+                    <h3>Monthly Sales</h3>
+                    <p class="dashboard-chart-description">
+                        Total invoice value for each month over
+                        the last six calendar months.
+                    </p>
+
+                    <div class="dashboard-chart-visual">
+                        <canvas id="monthlySalesChart"
+                                style="display: none;"
+                                role="img"
+                                aria-label="Bar chart of monthly sales">
+                        </canvas>
+
+                        <div id="monthlySalesEmpty"
+                             class="dashboard-chart-empty"
+                             role="status">
+                            Loading monthly sales...
+                        </div>
+                    </div>
+
+                    <p class="dashboard-chart-footer">
+                        Source: saved invoices in your database
+                    </p>
+                </article>
+
+                <!-- GRAPH 2: PAYMENT STATUS WITH COUNTS -->
+                <article class="dashboard-chart-card">
+                    <h3>Payment Status</h3>
+                    <p class="dashboard-chart-description">
+                        Distribution of paid, partially paid,
+                        and unpaid invoices. Counts appear on the slices.
+                    </p>
+
+                    <div class="dashboard-chart-visual">
+                        <canvas id="paymentStatusChart"
+                                style="display: none;"
+                                role="img"
+                                aria-label="Doughnut chart showing invoice counts by payment status">
+                        </canvas>
+
+                        <div id="paymentStatusEmpty"
+                             class="dashboard-chart-empty"
+                             role="status">
+                            Loading payment status...
+                        </div>
+                    </div>
+
+                    <p class="dashboard-chart-footer">
+                        Source: payment status of saved invoices
+                    </p>
+                </article>
+
+                <!-- GRAPH 3: SALES TREND -->
+                <article class="dashboard-chart-card dashboard-chart-card--wide">
+                    <h3>Sales Trend</h3>
+                    <p class="dashboard-chart-description">
+                        Track how your monthly sales values change
+                        over time.
+                    </p>
+
+                    <div class="dashboard-chart-visual">
+                        <canvas id="salesTrendChart"
+                                style="display: none;"
+                                role="img"
+                                aria-label="Line chart showing the monthly sales trend">
+                        </canvas>
+
+                        <div id="salesTrendEmpty"
+                             class="dashboard-chart-empty"
+                             role="status">
+                            Loading sales trend...
+                        </div>
+                    </div>
+
+                    <p class="dashboard-chart-footer">
+                        Source: saved invoice totals grouped by month
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+        <footer>
+            SalesManager · Local business management
+        </footer>
+    </main>
+
+    <!-- DASHBOARD GRAPH LOGIC -->
+    <script>
+        const dashboardChartInstances = {};
+
+        const chartTextColor = "#a1a69a";
+        const chartGridColor = "rgba(161, 166, 154, 0.12)";
+        const chartAccent = "#a6ef2d";
+
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                maximumFractionDigits: 2
+            }).format(Number(value) || 0);
+        };
+
+        const formatCompactCurrency = (value) => {
+            return new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                notation: "compact",
+                maximumFractionDigits: 1
+            }).format(Number(value) || 0);
+        };
+
+        function setChartState(canvasId, emptyId, hasData, message) {
+            const canvas = document.getElementById(canvasId);
+            const empty = document.getElementById(emptyId);
+
+            canvas.style.display = hasData ? "block" : "none";
+            empty.style.display = hasData ? "none" : "flex";
+
+            if (message) {
+                empty.textContent = message;
+            }
+        }
+
+        function destroyChart(chartId) {
+            if (dashboardChartInstances[chartId]) {
+                dashboardChartInstances[chartId].destroy();
+                delete dashboardChartInstances[chartId];
+            }
+        }
+
+        function getCommonAxisOptions() {
+            return {
+                x: {
+                    ticks: {
+                        color: chartTextColor,
+                        maxRotation: 0,
+                        autoSkip: true
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        color: chartGridColor
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: chartTextColor,
+                        callback: (value) =>
+                            formatCompactCurrency(value)
+                    },
+                    grid: {
+                        color: chartGridColor
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            };
+        }
+
+        // GRAPH 1: MONTHLY SALES
+        function renderMonthlySales(monthlySales) {
+            const canvasId = "monthlySalesChart";
+            const emptyId = "monthlySalesEmpty";
+
+            destroyChart(canvasId);
+
+            const rows = Array.isArray(monthlySales)
+                ? monthlySales
+                : [];
+
+            if (!rows.length) {
+                setChartState(
+                    canvasId,
+                    emptyId,
+                    false,
+                    "No sales records were found for the last six calendar months."
+                );
+                return;
+            }
+
+            const labels = rows.map(
+                row => row.month_label || "Unknown month"
+            );
+
+            const values = rows.map(
+                row => Number(row.sales_total) || 0
+            );
+
+            setChartState(canvasId, emptyId, true);
+
+            dashboardChartInstances[canvasId] = new Chart(
+                document.getElementById(canvasId),
+                {
+                    type: "bar",
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: "Monthly Sales",
+                            data: values,
+                            backgroundColor: "rgba(166, 239, 45, 0.68)",
+                            borderColor: chartAccent,
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            maxBarThickness: 48
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: "index",
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: context =>
+                                        "Sales: " +
+                                        formatCurrency(context.parsed.y)
+                                }
+                            }
+                        },
+                        scales: getCommonAxisOptions()
+                    }
+                }
+            );
+        }
+
+        // GRAPH 2: PAYMENT STATUS WITH INVOICE COUNTS
+        function renderPaymentStatus(statusRows) {
+            const canvasId = "paymentStatusChart";
+            const emptyId = "paymentStatusEmpty";
+
+            destroyChart(canvasId);
+
+            const rows = Array.isArray(statusRows)
+                ? statusRows
+                : [];
+
+            // Remove zero-count categories from the chart.
+            const populatedRows = rows.filter(
+                row => Number(row.invoice_count) > 0
+            );
+
+            if (!populatedRows.length) {
+                setChartState(
+                    canvasId,
+                    emptyId,
+                    false,
+                    "No invoices are available yet."
+                );
+                return;
+            }
+
+            const labels = populatedRows.map(
+                row => row.payment_status || "Unspecified"
+            );
+
+            const values = populatedRows.map(
+                row => Number(row.invoice_count) || 0
+            );
+
+            const colors = labels.map(label => {
+                const status = String(label).toLowerCase();
+
+                if (status === "paid") {
+                    return "#a6ef2d";
+                }
+
+                if (status === "partially paid") {
+                    return "#e8bf61";
+                }
+
+                if (status === "unpaid") {
+                    return "#e57878";
+                }
+
+                return "#858b80";
+            });
+
+            setChartState(canvasId, emptyId, true);
+
+            dashboardChartInstances[canvasId] = new Chart(
+                document.getElementById(canvasId),
+                {
+                    type: "doughnut",
+
+                    // Enable the labels plugin for this chart.
+                    plugins: [ChartDataLabels],
+
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: colors,
+                            borderColor: "#222320",
+                            borderWidth: 3,
+                            hoverOffset: 7
+                        }]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "45%",
+
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    color: chartTextColor,
+                                    padding: 18,
+                                    usePointStyle: true,
+                                    pointStyle: "circle"
+                                }
+                            },
+
+                            // Display invoice count on each slice.
+                            datalabels: {
+                                color: "#171a12",
+                                display: (context) => {
+                                    return Number(
+                                        context.dataset.data[context.dataIndex]
+                                    ) > 0;
+                                },
+                                font: {
+                                    weight: "bold",
+                                    size: 14
+                                },
+                                textAlign: "center",
+                                formatter: (value) => {
+                                    return Number(value) > 0
+                                        ? value
+                                        : "";
+                                }
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label: context => {
+                                        return `${context.label}: ${context.parsed} invoice(s)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+
+        // GRAPH 3: SALES TREND
+        function renderSalesTrend(monthlySales) {
+            const canvasId = "salesTrendChart";
+            const emptyId = "salesTrendEmpty";
+
+            destroyChart(canvasId);
+
+            const rows = Array.isArray(monthlySales)
+                ? monthlySales
+                : [];
+
+            if (!rows.length) {
+                setChartState(
+                    canvasId,
+                    emptyId,
+                    false,
+                    "No monthly sales records are available to show a trend."
+                );
+                return;
+            }
+
+            const labels = rows.map(
+                row => row.month_label || "Unknown month"
+            );
+
+            const values = rows.map(
+                row => Number(row.sales_total) || 0
+            );
+
+            setChartState(canvasId, emptyId, true);
+
+            dashboardChartInstances[canvasId] = new Chart(
+                document.getElementById(canvasId),
+                {
+                    type: "line",
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: "Sales",
+                            data: values,
+                            borderColor: chartAccent,
+                            backgroundColor: "rgba(166, 239, 45, 0.10)",
+                            borderWidth: 3,
+                            pointBackgroundColor: chartAccent,
+                            pointBorderColor: "#222320",
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            tension: 0.35,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: "index",
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: context =>
+                                        "Sales: " +
+                                        formatCurrency(context.parsed.y)
+                                }
+                            }
+                        },
+                        scales: getCommonAxisOptions()
+                    }
+                }
+            );
+        }
+
+        // LOAD CHART DATA FROM THE EXISTING FLASK API
+        async function loadDashboardCharts() {
+            const chartIds = [
+                ["monthlySalesChart", "monthlySalesEmpty"],
+                ["paymentStatusChart", "paymentStatusEmpty"],
+                ["salesTrendChart", "salesTrendEmpty"]
+            ];
+
+            try {
+                if (typeof Chart === "undefined") {
+                    throw new Error(
+                        "Chart.js could not be loaded. Check your internet connection."
+                    );
+                }
+
+                if (typeof ChartDataLabels === "undefined") {
+                    throw new Error(
+                        "The chart labels plugin could not be loaded. Check your internet connection."
+                    );
+                }
+
+                const response = await fetch("/api/reports", {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Could not load dashboard data (HTTP ${response.status}).`
+                    );
+                }
+
+                const result = await response.json();
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                const monthlySales = result.monthly_sales || [];
+                const paymentStatus =
+                    result.payment_status_breakdown || [];
+
+                renderMonthlySales(monthlySales);
+                renderPaymentStatus(paymentStatus);
+                renderSalesTrend(monthlySales);
+
+            } catch (error) {
+                console.error("Dashboard chart error:", error);
+
+                chartIds.forEach(([canvasId, emptyId]) => {
+                    destroyChart(canvasId);
+
+                    setChartState(
+                        canvasId,
+                        emptyId,
+                        false,
+                        "Chart data could not be loaded. Check the Flask terminal and refresh the page."
+                    );
+                });
+            }
+        }
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            loadDashboardCharts
+        );
+    </script>
+</body>
+</html>

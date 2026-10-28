@@ -1,0 +1,771 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice History | SalesManager</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --page-bg: #151614;
+            --sidebar-bg: #20211f;
+            --card-bg: #222320;
+            --input-bg: #191a18;
+            --text: #f2f4ee;
+            --muted: #a1a69a;
+            --border: #373a33;
+            --accent: #a8e832;
+            --accent-hover: #b8f344;
+            --dark-text: #171a12;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .history-page {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .history-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .history-card h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .history-description {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+
+        .history-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .history-stat {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 20px;
+            min-width: 0;
+        }
+
+        .history-stat p {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Summary values are white */
+        .history-stat h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 25px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            overflow-wrap: anywhere;
+        }
+
+        .history-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .history-button {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            font-family: inherit;
+        }
+
+        .history-primary {
+            background: var(--accent);
+            color: var(--dark-text);
+            border: 1px solid var(--accent);
+        }
+
+        .history-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .history-secondary {
+            background: #262a26;
+            color: var(--text);
+            border: 1px solid #454c45;
+        }
+
+        .history-secondary:hover {
+            background: #333833;
+        }
+
+        .history-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Search and filter controls */
+        .history-filters {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr) auto;
+            gap: 12px;
+            margin: 22px 0 8px;
+        }
+
+        .history-filter-input,
+        .history-filter-select {
+            width: 100%;
+            min-width: 0;
+            padding: 11px 12px;
+            background: var(--input-bg);
+            color: var(--text);
+            border: 1px solid #41453c;
+            border-radius: 8px;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .history-filter-input::placeholder {
+            color: #777d71;
+        }
+
+        .history-filter-select option {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .history-filter-input:focus,
+        .history-filter-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(168, 232, 50, 0.12);
+        }
+
+        .history-table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            min-width: 1150px;
+            margin-top: 18px;
+            border-collapse: collapse;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #353a35;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .history-table th {
+            background: #292d29;
+            color: #b7c2b7;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .history-table td {
+            color: #e3e7df;
+        }
+
+        .history-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .history-table tbody tr:hover {
+            background: #292c27;
+        }
+
+        .history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .invoice-number {
+            color: var(--accent) !important;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .payment-badge {
+            display: inline-block;
+            border-radius: 20px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .payment-paid {
+            background: rgba(168, 232, 50, 0.13);
+            color: var(--accent);
+            border: 1px solid rgba(168, 232, 50, 0.35);
+        }
+
+        .payment-unpaid {
+            background: rgba(255, 92, 92, 0.10);
+            color: #ff8585;
+            border: 1px solid rgba(255, 92, 92, 0.30);
+        }
+
+        .payment-partial {
+            background: rgba(255, 193, 7, 0.10);
+            color: #f0c75e;
+            border: 1px solid rgba(255, 193, 7, 0.30);
+        }
+
+        .invoice-action-link {
+            display: inline-block;
+            padding: 8px 11px;
+            background: var(--accent);
+            color: var(--dark-text) !important;
+            border: 1px solid var(--accent);
+            border-radius: 7px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: background 0.2s ease;
+        }
+
+        .invoice-action-link:hover {
+            background: var(--accent-hover);
+        }
+
+        .history-empty {
+            text-align: center !important;
+            padding: 32px !important;
+            color: var(--muted) !important;
+        }
+
+        #historyMessage {
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .history-back-link {
+            display: inline-block;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .history-back-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 850px) {
+            .history-filters {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .history-filters button {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .history-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .history-card {
+                padding: 16px;
+            }
+
+            .history-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .history-filters button {
+                grid-column: auto;
+            }
+
+            .history-stat {
+                padding: 16px;
+            }
+
+            .history-stat h2 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <h2 class="brand">SalesManager</h2>
+
+        <p class="menu-label">MAIN MENU</p>
+
+        <a class="nav-link" href="/">Dashboard</a>
+
+        <a class="nav-link" href="{{ url_for('customers_page') }}">
+            Customers
+        </a>
+
+        <a class="nav-link" href="{{ url_for('products_page') }}">
+            Products
+        </a>
+
+        <a class="nav-link" href="{{ url_for('sales_page') }}">
+            Sales &amp; Billing
+        </a>
+
+        <a class="nav-link active" href="{{ url_for('sales_history_page') }}">
+            Invoice History
+        </a>
+
+        <a class="nav-link" href="{{ url_for('payments_page') }}">
+            Payments
+        </a>
+
+        <a class="nav-link" href="{{ url_for('reports_page') }}">
+            Reports
+        </a>
+
+        <div class="sidebar-bottom">
+            Your business, organized.
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">SALES RECORDS</p>
+                <h1>Invoice History</h1>
+                <p class="history-description">
+                    Search, filter, view and print invoices saved
+                    in your SalesManager database.
+                </p>
+            </div>
+        </header>
+
+        <div class="history-page">
+
+            <a class="history-back-link" href="{{ url_for('sales_page') }}">
+                ← Back to Sales &amp; Billing
+            </a>
+
+            <!-- SUMMARY -->
+            <section class="history-summary">
+
+                <article class="history-stat">
+                    <p>Matching invoices</p>
+                    <h2 id="invoiceCount">—</h2>
+                </article>
+
+                <article class="history-stat">
+                    <p>Total invoiced</p>
+                    <h2 id="invoiceTotal">—</h2>
+                </article>
+
+                <article class="history-stat">
+                    <p>Outstanding balance</p>
+                    <h2 id="invoiceOutstanding">—</h2>
+                </article>
+
+            </section>
+
+            <!-- INVOICE TABLE -->
+            <section class="history-card">
+
+                <div class="history-toolbar">
+                    <div>
+                        <h2>Saved invoices</h2>
+                        <p class="history-description">
+                            Find invoices by invoice number or customer,
+                            or filter by payment status.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="refreshHistory"
+                        class="history-button history-secondary"
+                    >
+                        Refresh records
+                    </button>
+                </div>
+
+                <!-- SEARCH AND FILTERS -->
+                <div class="history-filters">
+
+                    <input
+                        type="search"
+                        id="invoiceSearch"
+                        class="history-filter-input"
+                        placeholder="Search invoice number or customer..."
+                        aria-label="Search by invoice number or customer name"
+                    >
+
+                    <select
+                        id="invoiceStatusFilter"
+                        class="history-filter-select"
+                        aria-label="Filter by payment status"
+                    >
+                        <option value="all">All payment statuses</option>
+                        <option value="paid">Paid</option>
+                        <option value="partially paid">Partially Paid</option>
+                        <option value="unpaid">Unpaid</option>
+                    </select>
+
+                    <button
+                        type="button"
+                        id="clearInvoiceFilters"
+                        class="history-button history-secondary"
+                    >
+                        Clear filters
+                    </button>
+
+                </div>
+
+                <div class="history-table-container">
+                    <table class="history-table">
+
+                        <thead>
+                            <tr>
+                                <th>Invoice number</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Subtotal</th>
+                                <th>Discount</th>
+                                <th>Tax</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="invoiceRows">
+                            <tr>
+                                <td colspan="10" class="history-empty">
+                                    Loading invoices...
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <div
+                    id="historyMessage"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const invoiceRows = document.getElementById("invoiceRows");
+
+        const historyMessage =
+            document.getElementById("historyMessage");
+
+        const refreshHistoryButton =
+            document.getElementById("refreshHistory");
+
+        const invoiceSearch =
+            document.getElementById("invoiceSearch");
+
+        const invoiceStatusFilter =
+            document.getElementById("invoiceStatusFilter");
+
+        const clearInvoiceFilters =
+            document.getElementById("clearInvoiceFilters");
+
+        let allInvoices = [];
+
+        function formatMoney(value) {
+            return new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(Number(value) || 0);
+        }
+
+        function showHistoryMessage(message, isError = false) {
+            historyMessage.textContent = message;
+            historyMessage.style.color = isError
+                ? "#ff8585"
+                : "#a1a69a";
+        }
+
+        function showInvoiceTableMessage(message) {
+            invoiceRows.replaceChildren();
+
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+
+            cell.colSpan = 10;
+            cell.className = "history-empty";
+            cell.textContent = message;
+
+            row.appendChild(cell);
+            invoiceRows.appendChild(row);
+        }
+
+        function addCell(row, value, className = "") {
+            const cell = document.createElement("td");
+
+            cell.textContent = (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) ? "—" : String(value);
+
+            if (className) {
+                cell.className = className;
+            }
+
+            row.appendChild(cell);
+            return cell;
+        }
+
+        function getFilteredInvoices() {
+            const searchTerm = invoiceSearch.value
+                .trim()
+                .toLowerCase();
+
+            const selectedStatus = invoiceStatusFilter.value
+                .toLowerCase();
+
+            return allInvoices.filter(function(invoice) {
+                const invoiceNumber = String(
+                    invoice.invoice_number || ""
+                ).toLowerCase();
+
+                const customerName = String(
+                    invoice.customer_name || ""
+                ).toLowerCase();
+
+                const paymentStatus = String(
+                    invoice.payment_status || "Unpaid"
+                ).toLowerCase();
+
+                const matchesSearch =
+                    invoiceNumber.includes(searchTerm) ||
+                    customerName.includes(searchTerm);
+
+                const matchesStatus =
+                    selectedStatus === "all" ||
+                    paymentStatus === selectedStatus;
+
+                return matchesSearch && matchesStatus;
+            });
+        }
+
+        function renderInvoiceHistory() {
+            const invoices = getFilteredInvoices();
+
+            invoiceRows.replaceChildren();
+
+            let totalInvoiced = 0;
+            let totalOutstanding = 0;
+
+            invoices.forEach(function(invoice) {
+                const total = Number(invoice.total_amount) || 0;
+                const paid = Number(invoice.amount_paid) || 0;
+
+                totalInvoiced += total;
+                totalOutstanding += Math.max(0, total - paid);
+
+                const row = document.createElement("tr");
+
+                addCell(
+                    row,
+                    invoice.invoice_number,
+                    "invoice-number"
+                );
+
+                addCell(row, invoice.sale_date);
+                addCell(row, invoice.customer_name);
+                addCell(row, formatMoney(invoice.subtotal));
+                addCell(row, formatMoney(invoice.discount_amount));
+                addCell(row, formatMoney(invoice.tax_amount));
+                addCell(row, formatMoney(invoice.total_amount));
+                addCell(row, formatMoney(invoice.amount_paid));
+
+                const statusCell = document.createElement("td");
+                const statusBadge = document.createElement("span");
+
+                const status = String(
+                    invoice.payment_status || "Unpaid"
+                );
+
+                statusBadge.textContent = status;
+                statusBadge.className = "payment-badge";
+
+                if (status.toLowerCase() === "paid") {
+                    statusBadge.classList.add("payment-paid");
+                } else if (
+                    status.toLowerCase() === "partially paid"
+                ) {
+                    statusBadge.classList.add("payment-partial");
+                } else {
+                    statusBadge.classList.add("payment-unpaid");
+                }
+
+                statusCell.appendChild(statusBadge);
+                row.appendChild(statusCell);
+
+                const actionCell = document.createElement("td");
+                const invoiceLink = document.createElement("a");
+
+                invoiceLink.href =
+                    "/sales/" +
+                    encodeURIComponent(invoice.sale_id) +
+                    "/invoice";
+
+                invoiceLink.textContent = "View / Print";
+                invoiceLink.className = "invoice-action-link";
+                invoiceLink.target = "_blank";
+                invoiceLink.rel = "noopener noreferrer";
+
+                actionCell.appendChild(invoiceLink);
+                row.appendChild(actionCell);
+
+                invoiceRows.appendChild(row);
+            });
+
+            document.getElementById("invoiceCount").textContent =
+                String(invoices.length);
+
+            document.getElementById("invoiceTotal").textContent =
+                formatMoney(totalInvoiced);
+
+            document.getElementById("invoiceOutstanding").textContent =
+                formatMoney(totalOutstanding);
+
+            if (allInvoices.length === 0) {
+                showInvoiceTableMessage(
+                    "No invoices found. Create an invoice in Sales & Billing first."
+                );
+
+                showHistoryMessage("No saved invoices yet.");
+                return;
+            }
+
+            if (invoices.length === 0) {
+                showInvoiceTableMessage(
+                    "No invoices match your search or selected payment status."
+                );
+
+                showHistoryMessage(
+                    "No matching invoices. Try changing or clearing the filters."
+                );
+                return;
+            }
+
+            showHistoryMessage(
+                "Showing " + invoices.length +
+                " of " + allInvoices.length + " invoice(s)."
+            );
+        }
+
+        async function loadInvoiceHistory() {
+            refreshHistoryButton.disabled = true;
+            refreshHistoryButton.textContent = "Loading...";
+
+            showInvoiceTableMessage("Loading invoices...");
+
+            try {
+                const response = await fetch("/api/sales-history");
+                const invoices = await response.json();
+
+                if (!response.ok || !Array.isArray(invoices)) {
+                    throw new Error(
+                        invoices.error ||
+                        "Could not load invoice history."
+                    );
+                }
+
+                allInvoices = invoices;
+                renderInvoiceHistory();
+
+            } catch (error) {
+                allInvoices = [];
+
+                showInvoiceTableMessage(
+                    "Unable to load invoices. Check that Flask and MySQL are running."
+                );
+
+                showHistoryMessage(error.message, true);
+                console.error("Invoice history error:", error);
+
+            } finally {
+                refreshHistoryButton.disabled = false;
+                refreshHistoryButton.textContent = "Refresh records";
+            }
+        }
+
+        invoiceSearch.addEventListener(
+            "input",
+            renderInvoiceHistory
+        );
+
+        invoiceStatusFilter.addEventListener(
+            "change",
+            renderInvoiceHistory
+        );
+
+        clearInvoiceFilters.addEventListener("click", function() {
+            invoiceSearch.value = "";
+            invoiceStatusFilter.value = "all";
+            renderInvoiceHistory();
+            invoiceSearch.focus();
+        });
+
+        refreshHistoryButton.addEventListener(
+            "click",
+            loadInvoiceHistory
+        );
+
+        loadInvoiceHistory();
+    </script>
+
+</body>
+</html>

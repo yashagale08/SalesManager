@@ -1,0 +1,1108 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice | SalesManager</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --green: #20543d;
+            --green-dark: #17442f;
+            --green-light: #eef4ef;
+            --text: #222222;
+            --muted: #718078;
+            --border: #dce5df;
+            --side-bg: #303030;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+            background: var(--side-bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .toolbar {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar a,
+        .toolbar button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border-radius: 7px;
+            border: 1px solid #dce5df;
+            background: #ffffff;
+            color: var(--green);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .toolbar .bill-button {
+            background: var(--green);
+            color: #ffffff;
+            border-color: var(--green);
+        }
+
+        .toolbar .delivery-button {
+            background: #a8e832;
+            color: #171a12;
+            border-color: #a8e832;
+        }
+
+        .toolbar a:hover,
+        .toolbar button:hover {
+            opacity: 0.9;
+        }
+
+        .documents-wrap {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .invoice-paper {
+            width: 100%;
+            padding: 48px 50px 40px;
+            margin-bottom: 28px;
+            background: #ffffff;
+            color: var(--text);
+            border-radius: 9px;
+            box-shadow: 0 8px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 25px;
+            padding-bottom: 28px;
+            border-bottom: 3px solid var(--green);
+        }
+
+        .brand-name {
+            margin: 0;
+            color: var(--green);
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .brand-description {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .document-heading {
+            text-align: right;
+            min-width: 0;
+        }
+
+        .document-heading h2 {
+            margin: 0 0 15px;
+            color: var(--green);
+            font-size: 29px;
+            letter-spacing: 2px;
+        }
+
+        .document-heading p {
+            margin: 7px 0;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .section-label {
+            margin: 0 0 15px;
+            color: #59655e;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.1px;
+            text-transform: uppercase;
+        }
+
+        .details-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+            padding: 30px 0 35px;
+        }
+
+        .customer-name {
+            margin: 0 0 12px;
+            color: var(--green);
+            font-size: 20px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .detail-line {
+            margin: 9px 0;
+            line-height: 1.6;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background: var(--green-light);
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .items-section {
+            margin-top: 5px;
+        }
+
+        .items-section h3 {
+            margin: 0 0 20px;
+            color: var(--green);
+            font-size: 20px;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead th {
+            padding: 14px 12px;
+            background: var(--green-light);
+            color: #42584b;
+            text-align: left;
+            font-size: 11px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        tbody td {
+            padding: 15px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+            overflow-wrap: anywhere;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .totals {
+            width: 390px;
+            max-width: 100%;
+            margin: 25px 0 0 auto;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 11px 0;
+            font-size: 14px;
+        }
+
+        .total-row span:first-child {
+            color: #555555;
+        }
+
+        .total-row strong {
+            white-space: nowrap;
+        }
+
+        .total-final {
+            margin-top: 8px;
+            padding-top: 18px;
+            border-top: 3px solid var(--green);
+            color: var(--green);
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .payment-summary {
+            margin-top: 17px;
+            padding: 16px;
+            border-radius: 7px;
+            background: var(--green-light);
+        }
+
+        .payment-summary .total-row {
+            padding: 7px 0;
+        }
+
+        .invoice-footer {
+            margin-top: 42px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        /* DELIVERY SLIP */
+        .delivery-title-note {
+            margin: 0 0 22px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .delivery-panel {
+            padding: 21px;
+            margin: 0 0 24px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green);
+            border-radius: 7px;
+            background: #f8faf8;
+            break-inside: avoid;
+        }
+
+        .delivery-panel h3 {
+            margin: 0 0 18px;
+            color: var(--green);
+            font-size: 18px;
+        }
+
+        .delivery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 13px;
+        }
+
+        .delivery-field {
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #ffffff;
+        }
+
+        .delivery-field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .delivery-label {
+            margin: 0 0 8px;
+            color: #59655e;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+        }
+
+        .delivery-value {
+            margin: 0;
+            color: #222222;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .delivery-value.muted {
+            color: var(--muted);
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .delivery-collection {
+            padding: 18px;
+            margin-top: 22px;
+            border: 1px solid #c9dfb3;
+            border-radius: 7px;
+            background: #f2f8eb;
+            break-inside: avoid;
+        }
+
+        .delivery-collection .delivery-label {
+            margin-bottom: 8px;
+        }
+
+        .collection-amount {
+            margin: 0;
+            color: var(--green-dark);
+            font-size: 25px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .delivery-collection-note {
+            margin: 8px 0 0;
+            color: #59655e;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .document-copy-label {
+            display: inline-block;
+            margin-bottom: 17px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            background: var(--green-light);
+            color: var(--green);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .loading,
+        .error-message {
+            padding: 35px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .error-message {
+            color: #ffaaa5;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 12px;
+            }
+
+            .toolbar {
+                justify-content: stretch;
+            }
+
+            .toolbar a,
+            .toolbar button {
+                flex: 1 1 100%;
+            }
+
+            .invoice-paper {
+                padding: 25px 18px;
+                border-radius: 6px;
+            }
+
+            .invoice-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .brand-name {
+                font-size: 27px;
+            }
+
+            .document-heading {
+                text-align: left;
+            }
+
+            .document-heading h2 {
+                font-size: 26px;
+            }
+
+            .details-section,
+            .delivery-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .delivery-field.full-width {
+                grid-column: auto;
+            }
+
+            .delivery-panel {
+                padding: 14px;
+            }
+
+            .totals {
+                width: 100%;
+            }
+
+            table {
+                min-width: 480px;
+            }
+
+            .total-final {
+                font-size: 22px;
+            }
+        }
+
+        @page {
+            size: A4;
+            margin: 12mm;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 100%;
+                min-height: auto;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                color: #222222 !important;
+            }
+
+            .toolbar {
+                display: none !important;
+            }
+
+            .documents-wrap {
+                width: 100%;
+                max-width: none;
+                margin: 0;
+            }
+
+            .invoice-paper {
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                padding: 5px;
+                border-radius: 0;
+                box-shadow: none !important;
+                background: #ffffff !important;
+            }
+
+            /* Print only the selected document. */
+            body.print-customer-bill #delivery-slip {
+                display: none !important;
+            }
+
+            body.print-delivery-slip #customer-bill {
+                display: none !important;
+            }
+
+            .invoice-header,
+            .details-section,
+            .items-section,
+            .totals,
+            .payment-summary,
+            .delivery-panel,
+            .delivery-collection,
+            .invoice-footer {
+                break-inside: avoid;
+            }
+
+            thead th,
+            .status,
+            .payment-summary,
+            .delivery-panel,
+            .delivery-field,
+            .delivery-collection,
+            .document-copy-label {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .invoice-paper,
+            .invoice-paper * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .delivery-value,
+            .detail-line,
+            td,
+            th {
+                overflow-wrap: anywhere;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="toolbar">
+        <a href="/sales-history">← Invoice History</a>
+
+        <button type="button"
+                class="bill-button"
+                onclick="printDocument('customer-bill')">
+            Print Customer Bill
+        </button>
+
+        <button type="button"
+                class="delivery-button"
+                onclick="printDocument('delivery-slip')">
+            Print Delivery Slip
+        </button>
+    </div>
+
+    <div id="loading" class="loading">Loading invoice...</div>
+    <div id="error" class="error-message" hidden></div>
+
+    <main id="invoice-content" class="documents-wrap" hidden>
+
+        <!-- =========================================
+             DOCUMENT 1: CUSTOMER BILL
+             ========================================= -->
+        <section class="invoice-paper" id="customer-bill">
+
+            <header class="invoice-header">
+                <div>
+                    <h1 class="brand-name">SalesManager</h1>
+                    <div class="brand-description">
+                        Local business management
+                    </div>
+                </div>
+
+                <div class="document-heading">
+                    <h2>INVOICE</h2>
+                    <p>
+                        <strong>Invoice No:</strong>
+                        <span id="bill-invoice-number"></span>
+                    </p>
+                    <p>
+                        <strong>Date:</strong>
+                        <span id="bill-invoice-date"></span>
+                    </p>
+                </div>
+            </header>
+
+            <section class="details-section">
+                <div>
+                    <h3 class="section-label">Bill To</h3>
+                    <h2 class="customer-name" id="bill-customer-name"></h2>
+                    <p class="detail-line" id="bill-customer-phone"></p>
+                    <p class="detail-line" id="bill-customer-email"></p>
+                    <p class="detail-line" id="bill-customer-address"></p>
+                </div>
+
+                <div>
+                    <h3 class="section-label">Invoice Details</h3>
+
+                    <p class="detail-line">
+                        <strong>Invoice ID:</strong>
+                        <span id="bill-invoice-id"></span>
+                    </p>
+
+                    <p class="detail-line">
+                        <strong>Payment Status:</strong>
+                        <span id="bill-payment-status" class="status"></span>
+                    </p>
+
+                    <p class="detail-line">
+                        <strong>Currency:</strong>
+                        Indian Rupees (INR)
+                    </p>
+                </div>
+            </section>
+
+            <section class="items-section">
+                <h3>Items and Services</h3>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-right">Unit Price</th>
+                                <th class="text-right">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bill-items-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="totals">
+                <div class="total-row">
+                    <span>Subtotal</span>
+                    <strong id="bill-subtotal"></strong>
+                </div>
+
+                <div class="total-row">
+                    <span>Discount</span>
+                    <strong id="bill-discount"></strong>
+                </div>
+
+                <div class="total-row">
+                    <span>Tax</span>
+                    <strong id="bill-tax"></strong>
+                </div>
+
+                <div class="total-row total-final">
+                    <span>Total</span>
+                    <strong id="bill-total"></strong>
+                </div>
+
+                <div class="payment-summary">
+                    <div class="total-row">
+                        <span>Amount Paid</span>
+                        <strong id="bill-amount-paid"></strong>
+                    </div>
+
+                    <div class="total-row">
+                        <span>Balance Due</span>
+                        <strong id="bill-balance-due"></strong>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="invoice-footer">
+                <strong>Thank you for your business!</strong>
+                <br>
+                Customer copy · SalesManager
+            </footer>
+        </section>
+
+        <!-- =========================================
+             DOCUMENT 2: DELIVERY SLIP
+             No unit prices or invoice totals on this copy.
+             ========================================= -->
+        <section class="invoice-paper" id="delivery-slip">
+
+            <span class="document-copy-label">
+                Delivery Copy
+            </span>
+
+            <header class="invoice-header">
+                <div>
+                    <h1 class="brand-name">SalesManager</h1>
+                    <div class="brand-description">
+                        Order delivery details
+                    </div>
+                </div>
+
+                <div class="document-heading">
+                    <h2>DELIVERY SLIP</h2>
+                    <p>
+                        <strong>Order No:</strong>
+                        <span id="delivery-invoice-number"></span>
+                    </p>
+                    <p>
+                        <strong>Order Date:</strong>
+                        <span id="delivery-invoice-date"></span>
+                    </p>
+                </div>
+            </header>
+
+            <p class="delivery-title-note">
+                Deliver the items listed below to the address provided.
+                Contact the customer if clarification is needed.
+            </p>
+
+            <section class="delivery-panel">
+                <h3>Customer &amp; Delivery Location</h3>
+
+                <div class="delivery-grid">
+                    <div class="delivery-field">
+                        <p class="delivery-label">Deliver To</p>
+                        <p class="delivery-value" id="delivery-customer-name"></p>
+                    </div>
+
+                    <div class="delivery-field">
+                        <p class="delivery-label">Phone Number</p>
+                        <p class="delivery-value" id="delivery-phone"></p>
+                    </div>
+
+                    <div class="delivery-field full-width">
+                        <p class="delivery-label">Delivery Address</p>
+                        <p class="delivery-value" id="delivery-address"></p>
+                    </div>
+
+                    <div class="delivery-field full-width" id="delivery-landmark-field">
+                        <p class="delivery-label">Landmark</p>
+                        <p class="delivery-value" id="delivery-landmark"></p>
+                    </div>
+
+                    <div class="delivery-field full-width"
+                         id="delivery-instructions-field">
+                        <p class="delivery-label">Delivery Instructions</p>
+                        <p class="delivery-value" id="delivery-instructions"></p>
+                    </div>
+                </div>
+
+                <div class="delivery-collection" id="delivery-collection" hidden>
+                    <p class="delivery-label">Amount to Collect on Delivery</p>
+                    <p class="collection-amount" id="delivery-amount-to-collect"></p>
+                    <p class="delivery-collection-note">
+                        Collect only this outstanding balance, then record the payment
+                        in SalesManager.
+                    </p>
+                </div>
+            </section>
+
+            <section class="items-section">
+                <h3>Items to Deliver</h3>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delivery-items-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <footer class="invoice-footer">
+                <strong>Delivery Copy</strong>
+                <br>
+                This copy contains delivery details and item quantities,
+                not product prices.
+            </footer>
+        </section>
+
+    </main>
+
+    <script>
+        const saleId = {{ sale_id | tojson }};
+
+        const money = (value) => {
+            const amount = Number(value ?? 0);
+
+            return new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(Number.isFinite(amount) ? amount : 0);
+        };
+
+        function setText(id, value) {
+            const element = document.getElementById(id);
+
+            if (value === null || value === undefined || value === "") {
+                element.textContent = "—";
+            } else {
+                element.textContent = String(value);
+            }
+        }
+
+        function setOptionalField(id, fieldId, value, fallback) {
+            const field = document.getElementById(fieldId);
+            const element = document.getElementById(id);
+
+            if (value === null || value === undefined || !String(value).trim()) {
+                element.textContent = fallback || "Not provided";
+                element.classList.add("muted");
+                field.hidden = true;
+            } else {
+                element.textContent = String(value).trim();
+                element.classList.remove("muted");
+                field.hidden = false;
+            }
+        }
+
+        function showError(message) {
+            document.getElementById("loading").hidden = true;
+
+            const error = document.getElementById("error");
+            error.textContent = message;
+            error.hidden = false;
+        }
+
+        function appendCell(row, value, className) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+
+            if (className) {
+                cell.className = className;
+            }
+
+            row.appendChild(cell);
+            return cell;
+        }
+
+        function populateBillItems(items) {
+            const tbody = document.getElementById("bill-items-body");
+            tbody.replaceChildren();
+
+            if (!items.length) {
+                const row = document.createElement("tr");
+                const cell = appendCell(
+                    row,
+                    "No items found for this invoice."
+                );
+
+                cell.colSpan = 4;
+                cell.style.textAlign = "center";
+                tbody.appendChild(row);
+                return;
+            }
+
+            items.forEach(function(item) {
+                const row = document.createElement("tr");
+
+                appendCell(row, item.product_name || "Product");
+                appendCell(
+                    row,
+                    String(item.quantity ?? 0),
+                    "text-center"
+                );
+                appendCell(
+                    row,
+                    money(item.unit_price),
+                    "text-right"
+                );
+                appendCell(
+                    row,
+                    money(item.line_total),
+                    "text-right"
+                );
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function populateDeliveryItems(items) {
+            const tbody = document.getElementById("delivery-items-body");
+            tbody.replaceChildren();
+
+            if (!items.length) {
+                const row = document.createElement("tr");
+                const cell = appendCell(
+                    row,
+                    "No items found for this invoice."
+                );
+
+                cell.colSpan = 2;
+                cell.style.textAlign = "center";
+                tbody.appendChild(row);
+                return;
+            }
+
+            items.forEach(function(item) {
+                const row = document.createElement("tr");
+
+                appendCell(row, item.product_name || "Product");
+                appendCell(
+                    row,
+                    String(item.quantity ?? 0),
+                    "text-center"
+                );
+
+                tbody.appendChild(row);
+            });
+        }
+
+        async function loadInvoice() {
+            try {
+                if (
+                    saleId === null ||
+                    saleId === undefined ||
+                    saleId === ""
+                ) {
+                    throw new Error("Invoice ID is missing.");
+                }
+
+                const response = await fetch(
+                    `/api/sales/${encodeURIComponent(saleId)}/invoice`
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Unable to load invoice. Server returned ${response.status}.`
+                    );
+                }
+
+                const result = await response.json();
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                const invoice = result.invoice;
+
+                if (!invoice) {
+                    throw new Error("Invoice data was not found.");
+                }
+
+                const items = Array.isArray(result.items)
+                    ? result.items
+                    : [];
+
+                const invoiceNumber = invoice.invoice_number || saleId;
+                const invoiceDate = invoice.sale_date || "—";
+                const customerName = invoice.customer_name || "Customer";
+                const customerPhone = invoice.customer_phone || "";
+
+                // -------------------------------
+                // CUSTOMER BILL
+                // -------------------------------
+                setText("bill-invoice-number", invoiceNumber);
+                setText("bill-invoice-date", invoiceDate);
+                setText("bill-invoice-id", invoice.sale_id ?? saleId);
+                setText("bill-customer-name", customerName);
+
+                setText(
+                    "bill-customer-phone",
+                    customerPhone ? "Phone: " + customerPhone : "Phone: Not provided"
+                );
+
+                setText(
+                    "bill-customer-email",
+                    invoice.customer_email
+                        ? "Email: " + invoice.customer_email
+                        : ""
+                );
+
+                setText(
+                    "bill-customer-address",
+                    invoice.customer_address
+                        ? "Address: " + invoice.customer_address
+                        : ""
+                );
+
+                setText("bill-payment-status", invoice.payment_status || "Unpaid");
+
+                const subtotal = Number(invoice.subtotal) || 0;
+                const discount = Number(invoice.discount_amount) || 0;
+                const tax = Number(invoice.tax_amount) || 0;
+                const total = Number(invoice.total_amount) || 0;
+                const amountPaid = Number(invoice.amount_paid) || 0;
+
+                const outstanding = Math.max(
+                    0,
+                    Number(
+                        result.outstanding_balance ?? (total - amountPaid)
+                    ) || 0
+                );
+
+                setText("bill-subtotal", money(subtotal));
+                setText("bill-discount", money(discount));
+                setText("bill-tax", money(tax));
+                setText("bill-total", money(total));
+                setText("bill-amount-paid", money(amountPaid));
+                setText("bill-balance-due", money(outstanding));
+
+                populateBillItems(items);
+
+                // -------------------------------
+                // DELIVERY SLIP
+                // -------------------------------
+                setText("delivery-invoice-number", invoiceNumber);
+                setText("delivery-invoice-date", invoiceDate);
+                setText("delivery-customer-name", customerName);
+                setText(
+                    "delivery-phone",
+                    customerPhone || "No phone number saved"
+                );
+
+                // Prefer the address stored for this individual invoice.
+                // Use the saved customer address only for older invoices
+                // with no delivery address recorded.
+                const deliveryAddress =
+                    invoice.delivery_address ||
+                    invoice.customer_address ||
+                    "";
+
+                const addressElement =
+                    document.getElementById("delivery-address");
+
+                if (String(deliveryAddress).trim()) {
+                    addressElement.textContent = String(deliveryAddress).trim();
+                    addressElement.classList.remove("muted");
+                } else {
+                    addressElement.textContent =
+                        "No delivery address provided";
+                    addressElement.classList.add("muted");
+                }
+
+                setOptionalField(
+                    "delivery-landmark",
+                    "delivery-landmark-field",
+                    invoice.delivery_landmark,
+                    "No landmark provided"
+                );
+
+                setOptionalField(
+                    "delivery-instructions",
+                    "delivery-instructions-field",
+                    invoice.delivery_instructions,
+                    "No special instructions"
+                );
+
+                const collectionBox =
+                    document.getElementById("delivery-collection");
+
+                if (outstanding > 0) {
+                    setText(
+                        "delivery-amount-to-collect",
+                        money(outstanding)
+                    );
+                    collectionBox.hidden = false;
+                } else {
+                    collectionBox.hidden = true;
+                }
+
+                populateDeliveryItems(items);
+
+                document.getElementById("loading").hidden = true;
+                document.getElementById("invoice-content").hidden = false;
+
+            } catch (error) {
+                console.error("Invoice loading error:", error);
+
+                showError(
+                    error.message || "Failed to load invoice."
+                );
+            }
+        }
+
+        function printDocument(documentType) {
+            if (document.getElementById("invoice-content").hidden) {
+                alert("Please wait until the invoice has loaded.");
+                return;
+            }
+
+            document.body.classList.remove(
+                "print-customer-bill",
+                "print-delivery-slip"
+            );
+
+            document.body.classList.add(
+                documentType === "delivery-slip"
+                    ? "print-delivery-slip"
+                    : "print-customer-bill"
+            );
+
+            window.print();
+        }
+
+        // Restore the screen view when the print dialog closes.
+        window.addEventListener("afterprint", function() {
+            document.body.classList.remove(
+                "print-customer-bill",
+                "print-delivery-slip"
+            );
+        });
+
+        loadInvoice();
+    </script>
+</body>
+</html>

@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Payments | SalesManager</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --page-bg: #151614;
+            --sidebar-bg: #20211f;
+            --card-bg: #222320;
+            --input-bg: #191a18;
+            --text: #f2f4ee;
+            --muted: #a1a69a;
+            --border: #373a33;
+            --accent: #a8e832;
+            --accent-hover: #b8f344;
+            --dark-text: #171a12;
+        }
+
+        .payments-page {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .payments-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-sizing: border-box;
+        }
+
+        .payments-card h2 {
+            margin: 0 0 8px;
+            color: var(--text);
+        }
+
+        .payments-description {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+
+        .payments-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .payments-stat {
+            min-width: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 20px;
+        }
+
+        .payments-stat p {
+            color: var(--muted);
+            font-size: 14px;
+            margin: 0 0 10px;
+        }
+
+        .payments-stat h2 {
+            color: #ffffff;
+            font-size: 24px;
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .payments-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .payments-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .payments-field label {
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .payments-field input,
+        .payments-field select,
+        .payments-field textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #41453c;
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+        }
+
+        .payments-field input::placeholder,
+        .payments-field textarea::placeholder {
+            color: #777d71;
+        }
+
+        .payments-field select option {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .payments-field input:focus,
+        .payments-field select:focus,
+        .payments-field textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(168, 232, 50, 0.12);
+        }
+
+        .payments-field textarea {
+            min-height: 85px;
+            resize: vertical;
+        }
+
+        .payments-full-width {
+            grid-column: 1 / -1;
+        }
+
+        .payments-button {
+            border-radius: 8px;
+            padding: 11px 17px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            font-family: inherit;
+        }
+
+        .payments-primary-button {
+            background: var(--accent);
+            color: var(--dark-text);
+            border: 1px solid var(--accent);
+        }
+
+        .payments-primary-button:hover {
+            background: var(--accent-hover);
+        }
+
+        .payments-secondary-button {
+            background: #262a26;
+            color: var(--text);
+            border: 1px solid #454c45;
+        }
+
+        .payments-secondary-button:hover {
+            background: #333833;
+        }
+
+        .payments-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .payments-field-help {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .payments-balance {
+            padding: 14px;
+            background: #292c27;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .payments-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .payments-table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .payments-table {
+            width: 100%;
+            min-width: 800px;
+            margin-top: 16px;
+            border-collapse: collapse;
+        }
+
+        .payments-table th,
+        .payments-table td {
+            padding: 13px 12px;
+            text-align: left;
+            border-bottom: 1px solid #353a35;
+            font-size: 13px;
+            vertical-align: middle;
+            overflow-wrap: anywhere;
+        }
+
+        .payments-table th {
+            background: #292d29;
+            color: #b7c2b7;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .payments-table td {
+            color: #e3e7df;
+        }
+
+        .payments-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .payments-table tbody tr:hover {
+            background: #292c27;
+        }
+
+        .payments-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .payments-empty {
+            text-align: center !important;
+            padding: 28px !important;
+            color: var(--muted) !important;
+        }
+
+        .payment-badge {
+            display: inline-block;
+            border-radius: 20px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .payment-badge-paid {
+            background: rgba(168, 232, 50, 0.13);
+            color: var(--accent);
+            border: 1px solid rgba(168, 232, 50, 0.35);
+        }
+
+        .payment-badge-unpaid {
+            background: rgba(255, 92, 92, 0.10);
+            color: #ff8585;
+            border: 1px solid rgba(255, 92, 92, 0.30);
+        }
+
+        .payment-badge-partial {
+            background: rgba(255, 193, 7, 0.10);
+            color: #f0c75e;
+            border: 1px solid rgba(255, 193, 7, 0.30);
+        }
+
+        #paymentMessage {
+            margin-top: 14px;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 700px) {
+            .payments-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .payments-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .payments-full-width {
+                grid-column: auto;
+            }
+
+            .payments-card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <h2 class="brand">SalesManager</h2>
+
+        <p class="menu-label">MAIN MENU</p>
+
+        <a class="nav-link" href="/">Dashboard</a>
+
+        <a class="nav-link"
+           href="{{ url_for('customers_page') }}">
+            Customers
+        </a>
+
+        <a class="nav-link"
+           href="{{ url_for('products_page') }}">
+            Products
+        </a>
+
+        <a class="nav-link"
+           href="{{ url_for('sales_page') }}">
+            Sales &amp; Billing
+        </a>
+
+        <a class="nav-link"
+           href="{{ url_for('sales_history_page') }}">
+            Invoice History
+        </a>
+
+        <a class="nav-link active"
+           href="{{ url_for('payments_page') }}">
+            Payments
+        </a>
+
+        <a class="nav-link"
+           href="{{ url_for('reports_page') }}">
+            Reports
+        </a>
+
+        <div class="sidebar-bottom">
+            Your business, organized.
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">PAYMENT MANAGEMENT</p>
+                <h1>Payments</h1>
+                <p class="payments-description">
+                    Record customer payments and track outstanding balances.
+                </p>
+            </div>
+        </header>
+
+        <div class="payments-page">
+
+            <!-- SUMMARY -->
+            <section class="payments-summary">
+
+                <article class="payments-stat">
+                    <p>Outstanding balance</p>
+                    <h2 id="outstandingTotal">₹0.00</h2>
+                </article>
+
+                <article class="payments-stat">
+                    <p>Total payments recorded</p>
+                    <h2 id="recordedPaymentTotal">₹0.00</h2>
+                </article>
+
+                <article class="payments-stat">
+                    <p>Unpaid / partially paid invoices</p>
+                    <h2 id="pendingInvoiceCount">0</h2>
+                </article>
+
+            </section>
+
+            <!-- RECORD A PAYMENT -->
+            <section class="payments-card">
+
+                <h2>Record a payment</h2>
+
+                <p class="payments-description">
+                    Select an outstanding invoice and enter the amount received.
+                    You can record partial payments.
+                </p>
+
+                <form id="paymentForm">
+
+                    <div class="payments-form-grid">
+
+                        <div class="payments-field payments-full-width">
+                            <label for="paymentInvoice">
+                                Invoice *
+                            </label>
+
+                            <select id="paymentInvoice" required>
+                                <option value="">
+                                    Loading invoices...
+                                </option>
+                            </select>
+
+                            <span class="payments-field-help">
+                                Only invoices with an outstanding balance are available.
+                            </span>
+                        </div>
+
+                        <div class="payments-field">
+                            <label for="paymentAmount">
+                                Amount received (₹) *
+                            </label>
+
+                            <input
+                                type="number"
+                                id="paymentAmount"
+                                min="0.01"
+                                step="0.01"
+                                placeholder="Enter amount received"
+                                required
+                            >
+                        </div>
+
+                        <div class="payments-field">
+                            <label for="paymentMethod">
+                                Payment method *
+                            </label>
+
+                            <select id="paymentMethod" required>
+                                <option value="Cash">Cash</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Card">Card</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="payments-field">
+                            <label for="paymentReference">
+                                Reference number
+                            </label>
+
+                            <input
+                                type="text"
+                                id="paymentReference"
+                                maxlength="100"
+                                placeholder="Optional UPI / transaction reference"
+                            >
+                        </div>
+
+                        <div class="payments-field">
+                            <label for="paymentNotes">
+                                Notes
+                            </label>
+
+                            <textarea
+                                id="paymentNotes"
+                                placeholder="Optional payment notes"
+                            ></textarea>
+                        </div>
+
+                        <div class="payments-full-width">
+                            <div
+                                id="selectedInvoiceBalance"
+                                class="payments-balance"
+                            >
+                                Select an invoice to see its balance.
+                            </div>
+                        </div>
+
+                        <div class="payments-full-width">
+                            <button
+                                type="submit"
+                                id="savePaymentButton"
+                                class="payments-button payments-primary-button"
+                            >
+                                Record payment
+                            </button>
+
+                            <button
+                                type="button"
+                                id="refreshPayments"
+                                class="payments-button payments-secondary-button"
+                            >
+                                Refresh records
+                            </button>
+
+                            <div
+                                id="paymentMessage"
+                                role="status"
+                                aria-live="polite"
+                            ></div>
+                        </div>
+
+                    </div>
+                </form>
+            </section>
+
+            <!-- PAYMENT HISTORY -->
+            <section class="payments-card">
+
+                <div class="payments-toolbar">
+                    <div>
+                        <h2>Payment history</h2>
+                        <p class="payments-description">
+                            Previously recorded payments from your database.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="payments-table-container">
+                    <table class="payments-table">
+
+                        <thead>
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Date</th>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="paymentRows">
+                            <tr>
+                                <td colspan="7" class="payments-empty">
+                                    Loading payment history...
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const paymentForm = document.getElementById("paymentForm");
+        const paymentInvoice = document.getElementById("paymentInvoice");
+        const paymentAmount = document.getElementById("paymentAmount");
+        const paymentMethod = document.getElementById("paymentMethod");
+        const paymentReference = document.getElementById("paymentReference");
+        const paymentNotes = document.getElementById("paymentNotes");
+
+        const paymentRows = document.getElementById("paymentRows");
+        const paymentMessage = document.getElementById("paymentMessage");
+        const savePaymentButton = document.getElementById("savePaymentButton");
+        const selectedInvoiceBalance =
+            document.getElementById("selectedInvoiceBalance");
+
+        let invoices = [];
+        let paymentRecords = [];
+        let submittingPayment = false;
+
+        function formatMoney(value) {
+            return new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(Number(value) || 0);
+        }
+
+        function showPaymentMessage(message, isError = false) {
+            paymentMessage.textContent = message;
+            paymentMessage.style.color = isError
+                ? "#ff8585"
+                : "#a1a69a";
+        }
+
+        function addTableCell(row, value) {
+            const cell = document.createElement("td");
+
+            cell.textContent =
+                value === null || value === undefined || value === ""
+                    ? "—"
+                    : String(value);
+
+            row.appendChild(cell);
+            return cell;
+        }
+
+        function showPaymentTableMessage(message) {
+            paymentRows.replaceChildren();
+
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+
+            cell.colSpan = 7;
+            cell.className = "payments-empty";
+            cell.textContent = message;
+
+            row.appendChild(cell);
+            paymentRows.appendChild(row);
+        }
+
+        function getOutstanding(invoice) {
+            return Math.max(
+                0,
+                Number(invoice.outstanding_balance) || 0
+            );
+        }
+
+        function updateSelectedInvoiceBalance(setDefaultAmount = false) {
+            const invoiceId = Number(paymentInvoice.value);
+
+            const invoice = invoices.find(function(item) {
+                return Number(item.sale_id) === invoiceId;
+            });
+
+            if (!invoice) {
+                selectedInvoiceBalance.textContent =
+                    "Select an invoice to see its balance.";
+
+                paymentAmount.removeAttribute("max");
+                return;
+            }
+
+            const balance = getOutstanding(invoice);
+
+            selectedInvoiceBalance.textContent =
+                "Invoice " + invoice.invoice_number +
+                " | Total: " + formatMoney(invoice.total_amount) +
+                " | Paid: " + formatMoney(invoice.amount_paid) +
+                " | Balance: " + formatMoney(balance);
+
+            paymentAmount.max = balance.toFixed(2);
+
+            if (setDefaultAmount) {
+                paymentAmount.value = balance.toFixed(2);
+            }
+        }
+
+        function renderInvoiceOptions(preferredSaleId = null) {
+            paymentInvoice.replaceChildren();
+
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = invoices.some(function(invoice) {
+                return getOutstanding(invoice) > 0;
+            })
+                ? "Select an outstanding invoice"
+                : "No outstanding invoices";
+
+            paymentInvoice.appendChild(placeholder);
+
+            invoices
+                .filter(function(invoice) {
+                    return getOutstanding(invoice) > 0;
+                })
+                .forEach(function(invoice) {
+                    const option = document.createElement("option");
+
+                    option.value = invoice.sale_id;
+
+                    option.textContent =
+                        invoice.invoice_number +
+                        " — " + invoice.customer_name +
+                        " — Due " + formatMoney(
+                            invoice.outstanding_balance
+                        );
+
+                    paymentInvoice.appendChild(option);
+                });
+
+            if (
+                preferredSaleId !== null &&
+                Array.from(paymentInvoice.options).some(function(option) {
+                    return option.value === String(preferredSaleId);
+                })
+            ) {
+                paymentInvoice.value = String(preferredSaleId);
+                updateSelectedInvoiceBalance(false);
+            } else {
+                paymentInvoice.value = "";
+                paymentAmount.value = "";
+                updateSelectedInvoiceBalance(false);
+            }
+        }
+
+        function renderPaymentHistory() {
+            paymentRows.replaceChildren();
+
+            if (paymentRecords.length === 0) {
+                showPaymentTableMessage(
+                    "No payments have been recorded yet."
+                );
+                return;
+            }
+
+            paymentRecords.forEach(function(payment) {
+                const row = document.createElement("tr");
+
+                addTableCell(row, payment.payment_id);
+                addTableCell(row, payment.payment_date);
+                addTableCell(row, payment.invoice_number);
+                addTableCell(row, payment.customer_name);
+                addTableCell(row, formatMoney(payment.amount));
+                addTableCell(row, payment.payment_method);
+                addTableCell(row, payment.reference_number);
+
+                paymentRows.appendChild(row);
+            });
+        }
+
+        function updatePaymentSummary() {
+            const outstanding = invoices.reduce(function(sum, invoice) {
+                return sum + getOutstanding(invoice);
+            }, 0);
+
+            const totalRecorded = paymentRecords.reduce(function(sum, item) {
+                return sum + (Number(item.amount) || 0);
+            }, 0);
+
+            const pendingCount = invoices.filter(function(invoice) {
+                return getOutstanding(invoice) > 0;
+            }).length;
+
+            document.getElementById("outstandingTotal").textContent =
+                formatMoney(outstanding);
+
+            document.getElementById("recordedPaymentTotal").textContent =
+                formatMoney(totalRecorded);
+
+            document.getElementById("pendingInvoiceCount").textContent =
+                String(pendingCount);
+        }
+
+        async function loadPayments(preferredSaleId = null) {
+            try {
+                const response = await fetch("/api/payments");
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Could not load payment records."
+                    );
+                }
+
+                if (
+                    !result ||
+                    !Array.isArray(result.invoices) ||
+                    !Array.isArray(result.payments)
+                ) {
+                    throw new Error("Unexpected response from Payments API.");
+                }
+
+                invoices = result.invoices;
+                paymentRecords = result.payments;
+
+                renderInvoiceOptions(preferredSaleId);
+                renderPaymentHistory();
+                updatePaymentSummary();
+
+                if (invoices.length === 0) {
+                    showPaymentMessage(
+                        "No invoices found. Create an invoice first."
+                    );
+                } else if (
+                    !invoices.some(function(invoice) {
+                        return getOutstanding(invoice) > 0;
+                    })
+                ) {
+                    showPaymentMessage(
+                        "All invoices are fully paid."
+                    );
+                } else {
+                    showPaymentMessage("");
+                }
+
+            } catch (error) {
+                paymentInvoice.replaceChildren();
+
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "Could not load invoices";
+                paymentInvoice.appendChild(option);
+
+                showPaymentTableMessage(
+                    "Could not load payment history. Check Flask and MySQL."
+                );
+
+                showPaymentMessage(error.message, true);
+                console.error("Payment loading error:", error);
+            }
+        }
+
+        paymentInvoice.addEventListener("change", function() {
+            updateSelectedInvoiceBalance(true);
+            showPaymentMessage("");
+        });
+
+        paymentForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            if (submittingPayment) {
+                return;
+            }
+
+            const saleId = Number(paymentInvoice.value);
+            const amount = Number(paymentAmount.value);
+
+            if (!saleId) {
+                showPaymentMessage(
+                    "Please select an outstanding invoice.",
+                    true
+                );
+                return;
+            }
+
+            if (
+                paymentAmount.value.trim() === "" ||
+                !Number.isFinite(amount) ||
+                amount <= 0
+            ) {
+                showPaymentMessage(
+                    "Enter a valid payment amount greater than zero.",
+                    true
+                );
+                return;
+            }
+
+            const invoice = invoices.find(function(item) {
+                return Number(item.sale_id) === saleId;
+            });
+
+            if (!invoice) {
+                showPaymentMessage(
+                    "Selected invoice was not found. Refresh records and try again.",
+                    true
+                );
+                return;
+            }
+
+            const outstanding = getOutstanding(invoice);
+
+            if (amount > outstanding + 0.000001) {
+                showPaymentMessage(
+                    "Payment cannot exceed the outstanding balance of " +
+                    formatMoney(outstanding) + ".",
+                    true
+                );
+                return;
+            }
+
+            const payload = {
+                sale_id: saleId,
+                amount: amount,
+                payment_method: paymentMethod.value,
+                reference_number: paymentReference.value.trim(),
+                notes: paymentNotes.value.trim()
+            };
+
+            submittingPayment = true;
+            savePaymentButton.disabled = true;
+            savePaymentButton.textContent = "Recording payment...";
+
+            try {
+                const response = await fetch("/api/payments", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Could not record payment."
+                    );
+                }
+
+                paymentForm.reset();
+
+                await loadPayments(saleId);
+
+                showPaymentMessage(
+                    "Payment recorded for " +
+                    result.invoice_number +
+                    ". Remaining balance: " +
+                    formatMoney(result.outstanding_balance) +
+                    ". Status: " + result.payment_status + "."
+                );
+
+            } catch (error) {
+                showPaymentMessage(error.message, true);
+                console.error("Payment saving error:", error);
+
+            } finally {
+                submittingPayment = false;
+                savePaymentButton.disabled = false;
+                savePaymentButton.textContent = "Record payment";
+            }
+        });
+
+        document.getElementById("refreshPayments").addEventListener(
+            "click",
+            function() {
+                loadPayments(Number(paymentInvoice.value) || null);
+            }
+        );
+
+        loadPayments();
+    </script>
+
+</body>
+</html>

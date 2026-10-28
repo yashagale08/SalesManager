@@ -1,0 +1,896 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products | SalesManager</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --page-bg: #151614;
+            --sidebar-bg: #20211f;
+            --card-bg: #222320;
+            --input-bg: #191a18;
+            --text: #f2f4ee;
+            --muted: #a1a69a;
+            --border: #373a33;
+            --accent: #a8e832;
+            --accent-hover: #b8f344;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--page-bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 245px;
+            padding: 30px 18px;
+            display: flex;
+            flex-direction: column;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .brand {
+            margin: 0 0 38px;
+            font-size: 23px;
+            color: var(--text);
+            letter-spacing: -0.7px;
+        }
+
+        .brand span {
+            color: var(--accent);
+        }
+
+        .menu-label {
+            padding-left: 12px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 13px 12px;
+            margin: 3px 0;
+            border-radius: 8px;
+            color: #d4d9d0;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #30322d;
+            color: white;
+        }
+
+        .nav-link.active {
+            background: var(--accent);
+            color: #171a12;
+            font-weight: 700;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 20px 12px 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .main-content {
+            margin-left: 245px;
+            padding: 36px;
+            min-width: 0;
+            max-width: 1700px;
+            color: var(--text);
+        }
+
+        .topbar {
+            margin-bottom: 28px;
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            letter-spacing: -1px;
+            color: var(--text);
+        }
+
+        .products-page {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .products-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .products-card h2 {
+            margin: 0 0 8px;
+            color: var(--accent);
+            font-size: 21px;
+        }
+
+        .products-description {
+            margin: 0 0 22px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .products-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .products-field {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            min-width: 0;
+        }
+
+        .products-field label {
+            color: #e5eae4;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .products-field input,
+        .products-field textarea {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #41453c;
+            border-radius: 9px;
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .products-field input {
+            min-height: 47px;
+        }
+
+        .products-field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .products-field input::placeholder,
+        .products-field textarea::placeholder {
+            color: #879187;
+        }
+
+        .products-field input:focus,
+        .products-field textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(168, 232, 50, 0.12);
+        }
+
+        .products-full-width {
+            grid-column: 1 / -1;
+        }
+
+        .products-save-button,
+        .products-cancel-button,
+        .products-refresh-button {
+            min-height: 42px;
+            padding: 11px 17px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .products-save-button {
+            background: var(--accent);
+            color: #171a12;
+            border: 1px solid var(--accent);
+        }
+
+        .products-save-button:hover {
+            background: var(--accent-hover);
+        }
+
+        .products-save-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .products-cancel-button,
+        .products-refresh-button {
+            background: #262a26;
+            color: var(--text);
+            border: 1px solid #454c45;
+        }
+
+        .products-cancel-button {
+            margin-left: 8px;
+        }
+
+        .products-cancel-button:hover,
+        .products-refresh-button:hover {
+            background: #333833;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        #productMessage {
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .products-table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .products-table {
+            width: 100%;
+            min-width: 850px;
+            margin-top: 18px;
+            border-collapse: collapse;
+        }
+
+        .products-table th,
+        .products-table td {
+            padding: 14px 12px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid #353a35;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .products-table th {
+            background: #292d29;
+            color: #b7c2b7;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .products-table td {
+            color: #e0e6df;
+        }
+
+        .products-table tbody tr:hover {
+            background: #292c27;
+        }
+
+        .products-empty {
+            text-align: center !important;
+            padding: 30px !important;
+            color: var(--muted) !important;
+        }
+
+        .products-refresh-button {
+            float: right;
+        }
+
+        .products-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .products-action-button {
+            border: 1px solid transparent;
+            border-radius: 7px;
+            padding: 8px 11px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .products-edit-button {
+            background: #35452a;
+            color: #c3f77c;
+            border-color: #445637;
+        }
+
+        .products-delete-button {
+            background: #4b2928;
+            color: #ffaaa5;
+            border-color: #653634;
+        }
+
+        .products-action-button:hover {
+            filter: brightness(1.2);
+        }
+
+        @media (max-width: 1000px) {
+            .main-content {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                min-height: auto;
+                padding: 20px;
+            }
+
+            .brand {
+                margin-bottom: 20px;
+            }
+
+            .sidebar-bottom {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px 14px;
+            }
+
+            h1 {
+                font-size: 27px;
+            }
+
+            .products-card {
+                padding: 17px;
+            }
+
+            .products-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .products-full-width {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <h2 class="brand"><span>Sales</span>Manager</h2>
+
+        <p class="menu-label">MAIN MENU</p>
+
+        <a class="nav-link" href="/">Dashboard</a>
+        <a class="nav-link"
+           href="{{ url_for('customers_page') }}">Customers</a>
+        <a class="nav-link active"
+           href="{{ url_for('products_page') }}">Products</a>
+        <a class="nav-link"
+           href="{{ url_for('sales_page') }}">Sales &amp; Billing</a>
+        <a class="nav-link"
+           href="{{ url_for('sales_history_page') }}">Invoice History</a>
+        <a class="nav-link"
+           href="{{ url_for('payments_page') }}">Payments</a>
+        <a class="nav-link"
+           href="{{ url_for('reports_page') }}">Reports</a>
+
+        <div class="sidebar-bottom">
+            Your business, organized.
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <p class="eyebrow">INVENTORY MANAGEMENT</p>
+            <h1>Products</h1>
+            <p class="products-description">
+                Manage your products, prices and stock.
+            </p>
+        </header>
+
+        <div class="products-page">
+
+            <section class="products-card">
+                <h2 id="productFormHeading">Add a product</h2>
+
+                <p class="products-description">
+                    Enter the product details below.
+                    Product name, price and stock quantity are required.
+                </p>
+
+                <form id="productForm">
+                    <div class="products-form-grid">
+
+                        <div class="products-field">
+                            <label for="productName">Product name *</label>
+                            <input type="text" id="productName"
+                                   maxlength="150"
+                                   placeholder="Enter product name"
+                                   required>
+                        </div>
+
+                        <div class="products-field">
+                            <label for="productPrice">Price (₹) *</label>
+                            <input type="number" id="productPrice"
+                                   min="0" max="99999999.99"
+                                   step="0.01"
+                                   placeholder="Enter price"
+                                   required>
+                        </div>
+
+                        <div class="products-field">
+                            <label for="productStock">Stock quantity *</label>
+                            <input type="number" id="productStock"
+                                   min="0" step="1"
+                                   placeholder="Enter stock quantity"
+                                   required>
+                        </div>
+
+                        <div class="products-field">
+                            <label for="productDescription">Description</label>
+                            <textarea id="productDescription"
+                                      placeholder="Enter product description"></textarea>
+                        </div>
+
+                        <div class="products-full-width">
+                            <button type="submit" id="productSaveButton"
+                                    class="products-save-button">
+                                Save product
+                            </button>
+
+                            <button type="button"
+                                    id="productCancelEditButton"
+                                    class="products-cancel-button"
+                                    hidden>
+                                Cancel edit
+                            </button>
+
+                            <div id="productMessage"
+                                 role="status"
+                                 aria-live="polite"></div>
+                        </div>
+
+                    </div>
+                </form>
+            </section>
+
+            <section class="products-card">
+                <button type="button" id="refreshProducts"
+                        class="products-refresh-button">
+                    Refresh records
+                </button>
+
+                <h2>Product inventory</h2>
+                <p class="products-description">
+                    All active products saved in your database appear here.
+                </p>
+
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Product ID</th>
+                                <th>Product name</th>
+                                <th>Description</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Date added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="productRows">
+                            <tr>
+                                <td colspan="7" class="products-empty">
+                                    Loading products...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const productForm = document.getElementById("productForm");
+        const productRows = document.getElementById("productRows");
+        const productMessage = document.getElementById("productMessage");
+
+        const productSaveButton =
+            document.getElementById("productSaveButton");
+
+        const productCancelEditButton =
+            document.getElementById("productCancelEditButton");
+
+        const productFormHeading =
+            document.getElementById("productFormHeading");
+
+        const refreshProductsButton =
+            document.getElementById("refreshProducts");
+
+        let editingProductId = null;
+        let isSubmittingProduct = false;
+
+        function showProductMessage(message, isError = false) {
+            productMessage.textContent = message;
+            productMessage.style.color = isError
+                ? "#ffaaa5"
+                : "#a8e832";
+        }
+
+        function showProductTableMessage(message) {
+            productRows.replaceChildren();
+
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+
+            cell.colSpan = 7;
+            cell.className = "products-empty";
+            cell.textContent = message;
+
+            row.appendChild(cell);
+            productRows.appendChild(row);
+        }
+
+        function resetProductForm() {
+            productForm.reset();
+            editingProductId = null;
+
+            productSaveButton.textContent = "Save product";
+            productCancelEditButton.hidden = true;
+            productFormHeading.textContent = "Add a product";
+        }
+
+        function startEditingProduct(product) {
+            editingProductId = product.product_id;
+
+            document.getElementById("productName").value =
+                product.name || "";
+
+            document.getElementById("productPrice").value =
+                product.price ?? "";
+
+            document.getElementById("productStock").value =
+                product.stock_quantity ?? 0;
+
+            document.getElementById("productDescription").value =
+                product.description || "";
+
+            productSaveButton.textContent = "Update product";
+            productCancelEditButton.hidden = false;
+            productFormHeading.textContent = "Edit product";
+
+            showProductMessage(
+                "Editing product #" + product.product_id
+            );
+
+            productForm.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+
+        function addCell(row, value) {
+            const cell = document.createElement("td");
+
+            cell.textContent =
+                value === null ||
+                value === undefined ||
+                value === ""
+                    ? "—"
+                    : String(value);
+
+            row.appendChild(cell);
+            return cell;
+        }
+
+        async function loadProducts() {
+            refreshProductsButton.disabled = true;
+            refreshProductsButton.textContent = "Loading...";
+
+            showProductTableMessage("Loading products...");
+
+            try {
+                const response = await fetch("/api/products");
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Unable to load products."
+                    );
+                }
+
+                if (!Array.isArray(result)) {
+                    throw new Error("Unexpected products response.");
+                }
+
+                productRows.replaceChildren();
+
+                if (result.length === 0) {
+                    showProductTableMessage(
+                        "No products added yet. Use the form above to add one."
+                    );
+                    return;
+                }
+
+                result.forEach(function(product) {
+                    const row = document.createElement("tr");
+
+                    addCell(row, product.product_id);
+                    addCell(row, product.name);
+                    addCell(row, product.description);
+
+                    addCell(
+                        row,
+                        product.price == null
+                            ? ""
+                            : "₹" + Number(product.price).toFixed(2)
+                    );
+
+                    addCell(row, product.stock_quantity);
+                    addCell(row, product.created_at);
+
+                    const actionCell = document.createElement("td");
+                    const actionContainer =
+                        document.createElement("div");
+
+                    actionContainer.className = "products-actions";
+
+                    const editButton =
+                        document.createElement("button");
+
+                    editButton.type = "button";
+                    editButton.textContent = "Edit";
+                    editButton.className =
+                        "products-action-button products-edit-button";
+
+                    editButton.addEventListener("click", function() {
+                        startEditingProduct(product);
+                    });
+
+                    const deleteButton =
+                        document.createElement("button");
+
+                    deleteButton.type = "button";
+                    deleteButton.textContent = "Delete";
+                    deleteButton.className =
+                        "products-action-button products-delete-button";
+
+                    deleteButton.addEventListener("click", function() {
+                        deleteProduct(product);
+                    });
+
+                    actionContainer.append(editButton, deleteButton);
+                    actionCell.appendChild(actionContainer);
+                    row.appendChild(actionCell);
+
+                    productRows.appendChild(row);
+                });
+
+            } catch (error) {
+                showProductTableMessage(
+                    "Could not load products. Check that Flask and MySQL are running."
+                );
+
+                showProductMessage(error.message, true);
+                console.error("Product loading error:", error);
+
+            } finally {
+                refreshProductsButton.disabled = false;
+                refreshProductsButton.textContent = "Refresh records";
+            }
+        }
+
+        productForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            if (isSubmittingProduct) {
+                return;
+            }
+
+            const name =
+                document.getElementById("productName").value.trim();
+
+            const priceInput =
+                document.getElementById("productPrice");
+
+            const stockInput =
+                document.getElementById("productStock");
+
+            const price = priceInput.value;
+            const stock = stockInput.value;
+
+            const description =
+                document.getElementById("productDescription").value.trim();
+
+            if (!name) {
+                showProductMessage(
+                    "Please enter the product name.",
+                    true
+                );
+                return;
+            }
+
+            if (
+                price === "" ||
+                !Number.isFinite(Number(price)) ||
+                Number(price) < 0 ||
+                Number(price) > 99999999.99
+            ) {
+                showProductMessage(
+                    "Please enter a valid non-negative price.",
+                    true
+                );
+                priceInput.focus();
+                return;
+            }
+
+            if (
+                stock === "" ||
+                !Number.isInteger(Number(stock)) ||
+                Number(stock) < 0
+            ) {
+                showProductMessage(
+                    "Please enter a valid non-negative whole-number stock quantity.",
+                    true
+                );
+                stockInput.focus();
+                return;
+            }
+
+            const product = {
+                name: name,
+                description: description,
+                price: Number(price),
+                stock_quantity: Number(stock)
+            };
+
+            const isEditing = editingProductId !== null;
+
+            const url = isEditing
+                ? "/api/products/" +
+                  encodeURIComponent(editingProductId)
+                : "/api/products";
+
+            isSubmittingProduct = true;
+            productSaveButton.disabled = true;
+
+            productSaveButton.textContent = isEditing
+                ? "Updating..."
+                : "Saving...";
+
+            showProductMessage(
+                isEditing ? "Updating product..." : "Saving product..."
+            );
+
+            try {
+                const response = await fetch(url, {
+                    method: isEditing ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(product)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Could not save product."
+                    );
+                }
+
+                resetProductForm();
+                await loadProducts();
+
+                showProductMessage(
+                    isEditing
+                        ? "Product updated successfully!"
+                        : "Product added successfully!"
+                );
+
+            } catch (error) {
+                showProductMessage(error.message, true);
+                console.error("Product save/update error:", error);
+
+            } finally {
+                isSubmittingProduct = false;
+                productSaveButton.disabled = false;
+                productSaveButton.textContent =
+                    editingProductId !== null
+                        ? "Update product"
+                        : "Save product";
+            }
+        });
+
+        productCancelEditButton.addEventListener("click", function() {
+            resetProductForm();
+            showProductMessage("Editing cancelled.");
+        });
+
+        async function deleteProduct(product) {
+            const confirmed = window.confirm(
+                "Are you sure you want to delete '" +
+                product.name +
+                "'? This cannot be undone."
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    "/api/products/" +
+                    encodeURIComponent(product.product_id),
+                    { method: "DELETE" }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Could not delete product."
+                    );
+                }
+
+                if (
+                    editingProductId !== null &&
+                    String(editingProductId) ===
+                    String(product.product_id)
+                ) {
+                    resetProductForm();
+                }
+
+                await loadProducts();
+                showProductMessage("Product deleted successfully!");
+
+            } catch (error) {
+                showProductMessage(error.message, true);
+                console.error("Product deletion error:", error);
+            }
+        }
+
+        refreshProductsButton.addEventListener(
+            "click",
+            loadProducts
+        );
+
+        loadProducts();
+    </script>
+
+</body>
+</html>

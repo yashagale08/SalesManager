@@ -1,0 +1,845 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers | SalesManager</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        :root {
+            --page-bg: #151614;
+            --sidebar-bg: #20211f;
+            --card-bg: #222320;
+            --card-hover: #2b2c28;
+            --input-bg: #191a18;
+            --text: #f2f4ee;
+            --text-secondary: #a1a69a;
+            --border: #373a33;
+            --accent: #a8e832;
+            --accent-hover: #b8f344;
+            --danger-bg: #492625;
+            --danger-text: #ffaaa5;
+            --success: #a8e832;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--page-bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 245px;
+            padding: 30px 18px;
+            display: flex;
+            flex-direction: column;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            color: var(--text);
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .brand {
+            margin: 0 0 38px;
+            font-size: 23px;
+            letter-spacing: -0.7px;
+            color: var(--text);
+        }
+
+        .brand span {
+            color: var(--accent);
+        }
+
+        .menu-label {
+            padding-left: 12px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 13px 12px;
+            margin: 3px 0;
+            border-radius: 9px;
+            color: #d7d9d2;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .nav-link:hover {
+            background: var(--card-hover);
+            color: var(--text);
+        }
+
+        .nav-link.active {
+            background: var(--accent);
+            color: #171a12;
+            font-weight: 700;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 20px 12px 0;
+            color: var(--text-secondary);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .main-content {
+            margin-left: 245px;
+            padding: 36px;
+            min-width: 0;
+        }
+
+        .topbar {
+            margin-bottom: 28px;
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            letter-spacing: -1px;
+            color: var(--text);
+        }
+
+        .page-description {
+            margin: 12px 0 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .customer-card {
+            padding: 26px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            background: var(--card-bg);
+            color: var(--text);
+            min-width: 0;
+        }
+
+        .customer-card h2 {
+            margin: 0 0 8px;
+            font-size: 21px;
+            color: var(--text);
+        }
+
+        .customer-description {
+            margin: 0 0 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .customer-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px 20px;
+        }
+
+        .customer-field {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .customer-field label {
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .customer-field input,
+        .customer-field textarea {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #41453c;
+            border-radius: 9px;
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .customer-field input {
+            min-height: 48px;
+        }
+
+        .customer-field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .customer-field input::placeholder,
+        .customer-field textarea::placeholder {
+            color: #82877d;
+        }
+
+        .customer-field input:focus,
+        .customer-field textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(168, 232, 50, 0.12);
+        }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .customer-button {
+            min-height: 43px;
+            padding: 11px 18px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+
+        .customer-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .customer-save-button {
+            background: var(--accent);
+            color: #171a12;
+        }
+
+        .customer-save-button:hover {
+            background: var(--accent-hover);
+        }
+
+        .customer-cancel-button,
+        .customer-refresh-button {
+            background: var(--card-bg);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .customer-cancel-button:hover,
+        .customer-refresh-button:hover {
+            background: var(--card-hover);
+        }
+
+        .records-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .customer-search {
+            width: 100%;
+            max-width: 300px;
+            min-height: 42px;
+            padding: 10px 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .customer-search:focus {
+            outline: 1px solid var(--accent);
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .customer-table {
+            width: 100%;
+            min-width: 780px;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        .customer-table th,
+        .customer-table td {
+            padding: 15px 12px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .customer-table th {
+            background: #292b27;
+            color: var(--text-secondary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .customer-table td {
+            background: transparent;
+            color: var(--text);
+            overflow-wrap: anywhere;
+        }
+
+        .customer-table tbody tr:hover td {
+            background: #292b26;
+        }
+
+        .customer-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .customer-empty {
+            text-align: center !important;
+            padding: 32px !important;
+            color: var(--text-secondary) !important;
+        }
+
+        .customer-action {
+            padding: 7px 11px;
+            margin: 2px 3px 2px 0;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .customer-edit-button {
+            background: #303d25;
+            color: #c4f18b;
+            border-color: #445637;
+        }
+
+        .customer-delete-button {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border-color: #653634;
+        }
+
+        .customer-edit-button:hover {
+            background: #3c4c2c;
+        }
+
+        .customer-delete-button:hover {
+            background: #5b2d2b;
+        }
+
+        #customerMessage {
+            margin-top: 15px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow-wrap: anywhere;
+        }
+
+        .message-error {
+            color: #ffaaa5 !important;
+        }
+
+        .message-success {
+            color: var(--accent) !important;
+        }
+
+        @media (max-width: 1000px) {
+            .main-content {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                min-height: auto;
+                padding: 20px;
+            }
+
+            .brand {
+                margin-bottom: 20px;
+            }
+
+            .sidebar-bottom {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px 14px;
+            }
+
+            h1 {
+                font-size: 27px;
+            }
+
+            .customer-card {
+                padding: 18px;
+            }
+
+            .customer-form {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .form-actions {
+                grid-column: 1;
+            }
+
+            .records-toolbar {
+                flex-direction: column;
+            }
+
+            .customer-search {
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <h2 class="brand"><span>Sales</span>Manager</h2>
+
+        <p class="menu-label">MAIN MENU</p>
+
+        <a class="nav-link" href="/">Dashboard</a>
+        <a class="nav-link active"
+           href="{{ url_for('customers_page') }}">Customers</a>
+        <a class="nav-link"
+           href="{{ url_for('products_page') }}">Products</a>
+        <a class="nav-link"
+           href="{{ url_for('sales_page') }}">Sales &amp; Billing</a>
+        <a class="nav-link"
+           href="{{ url_for('sales_history_page') }}">Invoice History</a>
+        <a class="nav-link"
+           href="{{ url_for('payments_page') }}">Payments</a>
+        <a class="nav-link"
+           href="{{ url_for('reports_page') }}">Reports</a>
+
+        <div class="sidebar-bottom">
+            Your business, organized.
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <p class="eyebrow">CUSTOMER MANAGEMENT</p>
+            <h1>Customers</h1>
+            <p class="page-description">
+                Add, view and manage your customer records.
+            </p>
+        </header>
+
+        <section class="customer-card">
+            <h2 id="formTitle">Add a customer</h2>
+            <p class="customer-description">
+                Enter the customer's details below. Only the customer name
+                is required.
+            </p>
+
+            <form id="customerForm" class="customer-form">
+                <div class="customer-field">
+                    <label for="customerName">Customer name *</label>
+                    <input id="customerName" name="name"
+                           type="text" maxlength="120"
+                           placeholder="Enter customer name" required>
+                </div>
+
+                <div class="customer-field">
+                    <label for="customerPhone">Phone number</label>
+                    <input id="customerPhone" name="phone"
+                           type="tel" maxlength="20"
+                           placeholder="Enter phone number">
+                </div>
+
+                <div class="customer-field">
+                    <label for="customerEmail">Email address</label>
+                    <input id="customerEmail" name="email"
+                           type="email" maxlength="120"
+                           placeholder="Enter email address">
+                </div>
+
+                <div class="customer-field">
+                    <label for="customerAddress">Address</label>
+                    <textarea id="customerAddress" name="address"
+                              placeholder="Enter customer address"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="saveCustomer"
+                            class="customer-button customer-save-button">
+                        Save customer
+                    </button>
+
+                    <button type="button" id="cancelEdit"
+                            class="customer-button customer-cancel-button"
+                            hidden>
+                        Cancel edit
+                    </button>
+                </div>
+            </form>
+
+            <div id="customerMessage" role="status"
+                 aria-live="polite"></div>
+        </section>
+
+        <section class="customer-card">
+            <div class="records-toolbar">
+                <div>
+                    <h2>Customer records</h2>
+                    <p class="customer-description">
+                        View and manage customers saved in your database.
+                    </p>
+                </div>
+
+                <button type="button" id="refreshCustomers"
+                        class="customer-button customer-refresh-button">
+                    Refresh records
+                </button>
+
+                <input type="search" id="customerSearch"
+                       class="customer-search"
+                       placeholder="Search customers..."
+                       aria-label="Search customers">
+            </div>
+
+            <div class="table-container">
+                <table class="customer-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerRows">
+                        <tr>
+                            <td colspan="7" class="customer-empty">
+                                Loading customers...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const customerForm = document.getElementById("customerForm");
+        const customerRows = document.getElementById("customerRows");
+        const customerMessage = document.getElementById("customerMessage");
+        const saveButton = document.getElementById("saveCustomer");
+        const cancelButton = document.getElementById("cancelEdit");
+        const refreshButton = document.getElementById("refreshCustomers");
+        const searchInput = document.getElementById("customerSearch");
+
+        let customers = [];
+        let editingCustomerId = null;
+
+        function showMessage(message, type = "") {
+            customerMessage.textContent = message;
+            customerMessage.className =
+                type === "error" ? "message-error" :
+                type === "success" ? "message-success" : "";
+        }
+
+        function createCell(row, value) {
+            const cell = document.createElement("td");
+            cell.textContent =
+                value === null || value === undefined || value === ""
+                    ? "—"
+                    : String(value);
+            row.appendChild(cell);
+            return cell;
+        }
+
+        function showTableMessage(message) {
+            customerRows.replaceChildren();
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 7;
+            cell.className = "customer-empty";
+            cell.textContent = message;
+            row.appendChild(cell);
+            customerRows.appendChild(row);
+        }
+
+        async function apiRequest(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...(options.body
+                        ? { "Content-Type": "application/json" }
+                        : {}),
+                    ...(options.headers || {})
+                }
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(result.error || "The request failed.");
+            }
+
+            return result;
+        }
+
+        function renderCustomers() {
+            const query = searchInput.value.trim().toLowerCase();
+
+            const filtered = customers.filter(customer => {
+                const searchable = [
+                    customer.customer_id,
+                    customer.name,
+                    customer.phone,
+                    customer.email,
+                    customer.address
+                ].join(" ").toLowerCase();
+
+                return searchable.includes(query);
+            });
+
+            customerRows.replaceChildren();
+
+            if (filtered.length === 0) {
+                showTableMessage(
+                    customers.length === 0
+                        ? "No customers found. Add your first customer above."
+                        : "No customers match your search."
+                );
+                return;
+            }
+
+            filtered.forEach(customer => {
+                const row = document.createElement("tr");
+
+                createCell(row, customer.customer_id);
+                createCell(row, customer.name);
+                createCell(row, customer.phone);
+                createCell(row, customer.email);
+                createCell(row, customer.address);
+                createCell(row, customer.created_at);
+
+                const actions = document.createElement("td");
+
+                const editButton = document.createElement("button");
+                editButton.type = "button";
+                editButton.className =
+                    "customer-action customer-edit-button";
+                editButton.textContent = "Edit";
+                editButton.addEventListener("click", () => {
+                    startEdit(customer);
+                });
+
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.className =
+                    "customer-action customer-delete-button";
+                deleteButton.textContent = "Delete";
+                deleteButton.addEventListener("click", () => {
+                    deleteCustomer(customer);
+                });
+
+                actions.append(editButton, deleteButton);
+                row.appendChild(actions);
+                customerRows.appendChild(row);
+            });
+        }
+
+        async function loadCustomers() {
+            refreshButton.disabled = true;
+            refreshButton.textContent = "Loading...";
+
+            try {
+                const result = await apiRequest("/api/customers");
+
+                if (!Array.isArray(result)) {
+                    throw new Error("Unexpected customer data received.");
+                }
+
+                customers = result;
+                renderCustomers();
+                showMessage(
+                    `Loaded ${customers.length} customer(s).`,
+                    "success"
+                );
+            } catch (error) {
+                showTableMessage(
+                    "Could not load customers. Check that Flask and MySQL are running."
+                );
+                showMessage(error.message, "error");
+                console.error("Load customers error:", error);
+            } finally {
+                refreshButton.disabled = false;
+                refreshButton.textContent = "Refresh records";
+            }
+        }
+
+        function startEdit(customer) {
+            editingCustomerId = customer.customer_id;
+
+            document.getElementById("customerName").value =
+                customer.name || "";
+            document.getElementById("customerPhone").value =
+                customer.phone || "";
+            document.getElementById("customerEmail").value =
+                customer.email || "";
+            document.getElementById("customerAddress").value =
+                customer.address || "";
+
+            document.getElementById("formTitle").textContent =
+                "Edit customer";
+            saveButton.textContent = "Update customer";
+            cancelButton.hidden = false;
+
+            showMessage(
+                `Editing customer #${customer.customer_id}.`,
+                "success"
+            );
+
+            customerForm.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+            document.getElementById("customerName").focus();
+        }
+
+        function resetForm() {
+            customerForm.reset();
+            editingCustomerId = null;
+
+            document.getElementById("formTitle").textContent =
+                "Add a customer";
+            saveButton.textContent = "Save customer";
+            cancelButton.hidden = true;
+        }
+
+        customerForm.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const data = {
+                name: document.getElementById("customerName").value.trim(),
+                phone: document.getElementById("customerPhone").value.trim(),
+                email: document.getElementById("customerEmail").value.trim(),
+                address: document.getElementById("customerAddress").value.trim()
+            };
+
+            if (!data.name) {
+                showMessage("Customer name is required.", "error");
+                return;
+            }
+
+            saveButton.disabled = true;
+            saveButton.textContent = editingCustomerId
+                ? "Updating..."
+                : "Saving...";
+
+            try {
+                if (editingCustomerId !== null) {
+                    await apiRequest(
+                        `/api/customers/${editingCustomerId}`,
+                        {
+                            method: "PUT",
+                            body: JSON.stringify(data)
+                        }
+                    );
+
+                    showMessage("Customer updated successfully.", "success");
+                } else {
+                    await apiRequest("/api/customers", {
+                        method: "POST",
+                        body: JSON.stringify(data)
+                    });
+
+                    showMessage("Customer saved successfully.", "success");
+                }
+
+                resetForm();
+                await loadCustomers();
+            } catch (error) {
+                showMessage(error.message, "error");
+                console.error("Save customer error:", error);
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = editingCustomerId !== null
+                    ? "Update customer"
+                    : "Save customer";
+
+                if (editingCustomerId === null) {
+                    saveButton.textContent = "Save customer";
+                }
+            }
+        });
+
+        async function deleteCustomer(customer) {
+            const confirmed = window.confirm(
+                `Delete customer "${customer.name}"?\n\n` +
+                "This action may affect records linked to this customer."
+            );
+
+            if (!confirmed) return;
+
+            try {
+                await apiRequest(
+                    `/api/customers/${customer.customer_id}`,
+                    { method: "DELETE" }
+                );
+
+                if (editingCustomerId === customer.customer_id) {
+                    resetForm();
+                }
+
+                showMessage("Customer deleted successfully.", "success");
+                await loadCustomers();
+            } catch (error) {
+                showMessage(error.message, "error");
+                console.error("Delete customer error:", error);
+            }
+        }
+
+        cancelButton.addEventListener("click", () => {
+            resetForm();
+            showMessage("Edit cancelled.");
+        });
+
+        refreshButton.addEventListener("click", loadCustomers);
+        searchInput.addEventListener("input", renderCustomers);
+
+        loadCustomers();
+    </script>
+</body>
+</html>

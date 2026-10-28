@@ -1,0 +1,1156 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales & Billing | SalesManager</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --page-bg: #151614;
+            --sidebar-bg: #20211f;
+            --card-bg: #222320;
+            --input-bg: #191a18;
+            --text: #f2f4ee;
+            --muted: #a1a69a;
+            --border: #373a33;
+            --accent: #a8e832;
+            --accent-hover: #b8f344;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--page-bg);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 245px;
+            padding: 30px 18px;
+            display: flex;
+            flex-direction: column;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .brand {
+            margin: 0 0 38px;
+            font-size: 23px;
+            color: var(--text);
+            letter-spacing: -0.7px;
+        }
+
+        .brand span {
+            color: var(--accent);
+        }
+
+        .menu-label {
+            padding-left: 12px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 13px 12px;
+            margin: 3px 0;
+            border-radius: 8px;
+            color: #d4d9d0;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #30322d;
+            color: white;
+        }
+
+        .nav-link.active {
+            background: var(--accent);
+            color: #171a12;
+            font-weight: 700;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 20px 12px 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .main-content {
+            margin-left: 245px;
+            padding: 36px;
+            min-width: 0;
+            max-width: 1700px;
+            color: var(--text);
+        }
+
+        .topbar {
+            margin-bottom: 28px;
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 32px;
+            letter-spacing: -1px;
+            color: var(--text);
+        }
+
+        .sales-page {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .sales-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .sales-card h2 {
+            margin: 0 0 8px;
+            color: var(--accent);
+            font-size: 21px;
+        }
+
+        .sales-description {
+            margin: 0 0 22px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .sales-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .sales-field {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            min-width: 0;
+        }
+
+        .sales-field label {
+            color: #e5eae4;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sales-field input,
+        .sales-field select,
+        .sales-field textarea {
+            width: 100%;
+            min-height: 47px;
+            padding: 13px;
+            border: 1px solid #41453c;
+            border-radius: 9px;
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .sales-field textarea {
+            min-height: 100px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .sales-field input:focus,
+        .sales-field select:focus,
+        .sales-field textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(168, 232, 50, 0.12);
+        }
+
+        .sales-field input::placeholder,
+        .sales-field textarea::placeholder {
+            color: #81877b;
+        }
+
+        .sales-field select option {
+            background: var(--input-bg);
+            color: var(--text);
+        }
+
+        .sales-full-width {
+            grid-column: 1 / -1;
+        }
+
+        .sales-button {
+            min-height: 42px;
+            padding: 11px 17px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .sales-primary-button {
+            background: var(--accent);
+            color: #171a12;
+            border: 1px solid var(--accent);
+        }
+
+        .sales-primary-button:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        .sales-secondary-button {
+            background: #262a26;
+            color: var(--text);
+            border: 1px solid #454c45;
+        }
+
+        .sales-secondary-button:hover {
+            background: #333833;
+        }
+
+        .sales-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Delivery contact summary */
+        .delivery-contact {
+            padding: 15px 17px;
+            margin-bottom: 22px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #191a18;
+        }
+
+        .delivery-contact-heading {
+            margin: 0 0 10px;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .delivery-contact p {
+            margin: 6px 0;
+            color: #dce2d8;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .delivery-contact strong {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .delivery-help {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .sales-table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .sales-table {
+            width: 100%;
+            min-width: 650px;
+            margin-top: 18px;
+            border-collapse: collapse;
+        }
+
+        .sales-table th,
+        .sales-table td {
+            padding: 14px 12px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid #353a35;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .sales-table th {
+            background: #292d29;
+            color: #b7c2b7;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .sales-table td {
+            color: #e0e6df;
+        }
+
+        .sales-table tbody tr:hover {
+            background: #292c27;
+        }
+
+        .sales-empty {
+            text-align: center !important;
+            padding: 30px !important;
+            color: var(--muted) !important;
+        }
+
+        .sales-remove-button {
+            border: 1px solid #653634;
+            border-radius: 7px;
+            padding: 8px 11px;
+            background: #4b2928;
+            color: #ffaaa5;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .sales-remove-button:hover {
+            filter: brightness(1.2);
+        }
+
+        .sales-summary {
+            width: 100%;
+            max-width: 360px;
+            margin: 22px 0 0 auto;
+        }
+
+        .sales-summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            padding: 10px 0;
+            color: #b9c2bb;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .sales-summary-row strong {
+            color: var(--text);
+        }
+
+        .sales-summary-row label {
+            color: #e5eae4;
+        }
+
+        .sales-summary-row input {
+            width: 135px;
+            min-height: 40px;
+            padding: 9px;
+            border: 1px solid #41453c;
+            border-radius: 9px;
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+            text-align: right;
+        }
+
+        .sales-summary-row input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(168, 232, 50, 0.12);
+        }
+
+        .sales-summary-row.total {
+            color: var(--accent);
+            font-size: 18px;
+            font-weight: 700;
+            border-bottom: none;
+        }
+
+        .sales-summary-row.total strong {
+            color: var(--accent);
+        }
+
+        .sales-status {
+            margin-top: 14px;
+            font-size: 14px;
+            color: var(--accent);
+            overflow-wrap: anywhere;
+        }
+
+        .sales-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 22px;
+        }
+
+        @media (max-width: 1000px) {
+            .main-content {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                min-height: auto;
+                padding: 20px;
+            }
+
+            .brand {
+                margin-bottom: 20px;
+            }
+
+            .sidebar-bottom {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px 14px;
+            }
+
+            h1 {
+                font-size: 27px;
+            }
+
+            .sales-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sales-full-width {
+                grid-column: auto;
+            }
+
+            .sales-card {
+                padding: 17px;
+            }
+
+            .sales-summary {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <h2 class="brand"><span>Sales</span>Manager</h2>
+
+        <p class="menu-label">MAIN MENU</p>
+
+        <a class="nav-link" href="/">Dashboard</a>
+        <a class="nav-link" href="{{ url_for('customers_page') }}">Customers</a>
+        <a class="nav-link" href="{{ url_for('products_page') }}">Products</a>
+        <a class="nav-link active" href="{{ url_for('sales_page') }}">Sales &amp; Billing</a>
+        <a class="nav-link" href="{{ url_for('sales_history_page') }}">Invoice History</a>
+        <a class="nav-link" href="{{ url_for('payments_page') }}">Payments</a>
+        <a class="nav-link" href="{{ url_for('reports_page') }}">Reports</a>
+
+        <div class="sidebar-bottom">
+            Your business, organized.
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <p class="eyebrow">SALES MANAGEMENT</p>
+            <h1>Sales &amp; Billing</h1>
+            <p class="sales-description">
+                Create customer invoices and calculate sales totals.
+            </p>
+        </header>
+
+        <div class="sales-page">
+
+            <!-- CUSTOMER -->
+            <section class="sales-card">
+                <h2>New invoice</h2>
+                <p class="sales-description">
+                    Select a customer before adding products.
+                </p>
+
+                <div class="sales-form-grid">
+                    <div class="sales-field sales-full-width">
+                        <label for="saleCustomer">Customer *</label>
+                        <select id="saleCustomer" required>
+                            <option value="">Loading customers...</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DELIVERY DETAILS -->
+            <section class="sales-card">
+                <h2>Delivery Details</h2>
+                <p class="sales-description">
+                    Confirm where the order should be delivered and add
+                    any information that will help the delivery person.
+                </p>
+
+                <div class="delivery-contact">
+                    <p class="delivery-contact-heading">
+                        Customer contact
+                    </p>
+
+                    <p>
+                        <strong>Name:</strong>
+                        <span id="deliveryContactName">Select a customer</span>
+                    </p>
+
+                    <p>
+                        <strong>Phone:</strong>
+                        <span id="deliveryContactPhone">—</span>
+                    </p>
+                </div>
+
+                <div class="sales-form-grid">
+                    <div class="sales-field sales-full-width">
+                        <label for="deliveryAddress">
+                            Delivery address *
+                        </label>
+                        <textarea
+                            id="deliveryAddress"
+                            rows="3"
+                            maxlength="1500"
+                            placeholder="Enter the full address for this delivery"
+                            required
+                        ></textarea>
+                        <p class="delivery-help">
+                            The address is filled from the selected customer's
+                            saved address when available. You can change it
+                            for this particular delivery.
+                        </p>
+                    </div>
+
+                    <div class="sales-field sales-full-width">
+                        <label for="deliveryLandmark">
+                            Landmark (optional)
+                        </label>
+                        <input
+                            type="text"
+                            id="deliveryLandmark"
+                            maxlength="255"
+                            placeholder="e.g. Near the main bus stop"
+                        >
+                    </div>
+
+                    <div class="sales-field sales-full-width">
+                        <label for="deliveryInstructions">
+                            Instructions for delivery person (optional)
+                        </label>
+                        <textarea
+                            id="deliveryInstructions"
+                            rows="3"
+                            maxlength="2000"
+                            placeholder="e.g. Call before arrival, use the side entrance, or handle with care"
+                        ></textarea>
+                        <p class="delivery-help">
+                            Add only practical delivery information.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADD PRODUCTS -->
+            <section class="sales-card">
+                <h2>Add products</h2>
+                <p class="sales-description">
+                    Choose a product and quantity, then add it to this invoice.
+                </p>
+
+                <div class="sales-form-grid">
+                    <div class="sales-field">
+                        <label for="saleProduct">Product *</label>
+                        <select id="saleProduct">
+                            <option value="">Loading products...</option>
+                        </select>
+                    </div>
+
+                    <div class="sales-field">
+                        <label for="saleQuantity">Quantity *</label>
+                        <input type="number" id="saleQuantity"
+                               min="1" step="1" value="1">
+                    </div>
+
+                    <div class="sales-full-width">
+                        <button type="button" id="addSaleItemButton"
+                                class="sales-button sales-primary-button">
+                            Add to invoice
+                        </button>
+                    </div>
+                </div>
+
+                <div id="salesStatus" class="sales-status"
+                     role="status" aria-live="polite"></div>
+            </section>
+
+            <!-- INVOICE ITEMS -->
+            <section class="sales-card">
+                <h2>Invoice items</h2>
+
+                <div class="sales-table-container">
+                    <table class="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Unit price</th>
+                                <th>Quantity</th>
+                                <th>Line total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="saleItemRows">
+                            <tr>
+                                <td colspan="5" class="sales-empty">
+                                    No products added to this invoice.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="sales-summary">
+                    <div class="sales-summary-row">
+                        <span>Subtotal</span>
+                        <strong id="saleSubtotal">₹0.00</strong>
+                    </div>
+
+                    <div class="sales-summary-row">
+                        <label for="saleDiscount">Discount (₹)</label>
+                        <input type="number" id="saleDiscount"
+                               min="0" step="0.01" value="0">
+                    </div>
+
+                    <div class="sales-summary-row">
+                        <label for="saleTax">Tax (₹)</label>
+                        <input type="number" id="saleTax"
+                               min="0" step="0.01" value="0">
+                    </div>
+
+                    <div class="sales-summary-row total">
+                        <span>Total</span>
+                        <strong id="saleTotal">₹0.00</strong>
+                    </div>
+
+                    <div class="sales-summary-row">
+                        <label for="saleAmountPaid">Amount paid (₹)</label>
+                        <input type="number" id="saleAmountPaid"
+                               min="0" step="0.01" value="0">
+                    </div>
+
+                    <div class="sales-summary-row">
+                        <span>Payment status</span>
+                        <strong id="salePaymentStatus">Unpaid</strong>
+                    </div>
+                </div>
+
+                <div class="sales-actions">
+                    <button type="button" id="saveSaleButton"
+                            class="sales-button sales-primary-button">
+                        Save invoice
+                    </button>
+
+                    <button type="button" id="clearSaleButton"
+                            class="sales-button sales-secondary-button">
+                        Clear invoice
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const customerSelect = document.getElementById("saleCustomer");
+        const productSelect = document.getElementById("saleProduct");
+        const quantityInput = document.getElementById("saleQuantity");
+        const itemRows = document.getElementById("saleItemRows");
+        const salesStatus = document.getElementById("salesStatus");
+
+        const deliveryAddressInput =
+            document.getElementById("deliveryAddress");
+        const deliveryLandmarkInput =
+            document.getElementById("deliveryLandmark");
+        const deliveryInstructionsInput =
+            document.getElementById("deliveryInstructions");
+
+        const discountInput = document.getElementById("saleDiscount");
+        const taxInput = document.getElementById("saleTax");
+        const amountPaidInput = document.getElementById("saleAmountPaid");
+
+        const addItemButton = document.getElementById("addSaleItemButton");
+        const saveSaleButton = document.getElementById("saveSaleButton");
+
+        let customers = [];
+        let products = [];
+        let cart = [];
+        let savingSale = false;
+
+        function money(value) {
+            return "₹" + Number(value || 0).toFixed(2);
+        }
+
+        function showSalesStatus(message, isError = false) {
+            salesStatus.textContent = message;
+            salesStatus.style.color = isError ? "#ffaaa5" : "#a8e832";
+        }
+
+        function validMoney(value) {
+            const amount = Number(value);
+            return Number.isFinite(amount) && amount >= 0;
+        }
+
+        // Show the selected customer's saved contact information
+        // and prefill the delivery address.
+        function updateDeliveryContact() {
+            const customerId = Number(customerSelect.value);
+
+            const customer = customers.find(function(item) {
+                return Number(item.customer_id) === customerId;
+            });
+
+            document.getElementById("deliveryContactName").textContent =
+                customer ? customer.name : "Select a customer";
+
+            document.getElementById("deliveryContactPhone").textContent =
+                customer && customer.phone
+                    ? customer.phone
+                    : "No phone number saved";
+
+            // Prefill from the customer's existing address.
+            // The user can edit this address for this delivery.
+            deliveryAddressInput.value =
+                customer && customer.address
+                    ? customer.address
+                    : "";
+        }
+
+        async function loadSaleCustomers() {
+            try {
+                const response = await fetch("/api/customers");
+                const data = await response.json();
+
+                if (!response.ok || !Array.isArray(data)) {
+                    throw new Error("Could not load customers.");
+                }
+
+                customers = data;
+                customerSelect.replaceChildren();
+
+                const firstOption = document.createElement("option");
+                firstOption.value = "";
+                firstOption.textContent = "Select a customer";
+                customerSelect.appendChild(firstOption);
+
+                customers.forEach(function(customer) {
+                    const option = document.createElement("option");
+                    option.value = customer.customer_id;
+                    option.textContent =
+                        customer.name + " (ID: " +
+                        customer.customer_id + ")";
+                    customerSelect.appendChild(option);
+                });
+
+                updateDeliveryContact();
+
+            } catch (error) {
+                customerSelect.replaceChildren();
+
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "Could not load customers";
+                customerSelect.appendChild(option);
+
+                showSalesStatus(error.message, true);
+            }
+        }
+
+        async function loadSaleProducts() {
+            try {
+                const response = await fetch("/api/products");
+                const data = await response.json();
+
+                if (!response.ok || !Array.isArray(data)) {
+                    throw new Error("Could not load products.");
+                }
+
+                products = data;
+                productSelect.replaceChildren();
+
+                const firstOption = document.createElement("option");
+                firstOption.value = "";
+                firstOption.textContent = "Select a product";
+                productSelect.appendChild(firstOption);
+
+                products.forEach(function(product) {
+                    const option = document.createElement("option");
+                    option.value = product.product_id;
+                    option.textContent =
+                        product.name + " — " + money(product.price);
+                    productSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                productSelect.replaceChildren();
+
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = "Could not load products";
+                productSelect.appendChild(option);
+
+                showSalesStatus(error.message, true);
+            }
+        }
+
+        function calculateSaleTotals() {
+            const subtotal = cart.reduce(function(sum, item) {
+                return sum + item.price * item.quantity;
+            }, 0);
+
+            const discount = validMoney(discountInput.value)
+                ? Number(discountInput.value) : 0;
+
+            const tax = validMoney(taxInput.value)
+                ? Number(taxInput.value) : 0;
+
+            const total = Math.max(0, subtotal - discount + tax);
+
+            const amountPaid = validMoney(amountPaidInput.value)
+                ? Number(amountPaidInput.value) : 0;
+
+            document.getElementById("saleSubtotal").textContent =
+                money(subtotal);
+
+            document.getElementById("saleTotal").textContent =
+                money(total);
+
+            let status = "Unpaid";
+
+            if (amountPaid >= total && total > 0) {
+                status = "Paid";
+            } else if (amountPaid > 0) {
+                status = "Partially Paid";
+            }
+
+            document.getElementById("salePaymentStatus").textContent =
+                status;
+
+            return {
+                subtotal: Number(subtotal.toFixed(2)),
+                discount_amount: Number(discount.toFixed(2)),
+                tax_amount: Number(tax.toFixed(2)),
+                total_amount: Number(total.toFixed(2)),
+                amount_paid: Number(amountPaid.toFixed(2))
+            };
+        }
+
+        function renderSaleItems() {
+            itemRows.replaceChildren();
+
+            if (cart.length === 0) {
+                const row = document.createElement("tr");
+                const cell = document.createElement("td");
+
+                cell.colSpan = 5;
+                cell.className = "sales-empty";
+                cell.textContent = "No products added to this invoice.";
+
+                row.appendChild(cell);
+                itemRows.appendChild(row);
+
+                calculateSaleTotals();
+                return;
+            }
+
+            cart.forEach(function(item, index) {
+                const row = document.createElement("tr");
+
+                [
+                    item.name,
+                    money(item.price),
+                    String(item.quantity),
+                    money(item.price * item.quantity)
+                ].forEach(function(value) {
+                    const cell = document.createElement("td");
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+
+                const actionCell = document.createElement("td");
+                const removeButton = document.createElement("button");
+
+                removeButton.type = "button";
+                removeButton.className = "sales-remove-button";
+                removeButton.textContent = "Remove";
+
+                removeButton.addEventListener("click", function() {
+                    cart.splice(index, 1);
+                    renderSaleItems();
+                    showSalesStatus("Product removed from invoice.");
+                });
+
+                actionCell.appendChild(removeButton);
+                row.appendChild(actionCell);
+                itemRows.appendChild(row);
+            });
+
+            calculateSaleTotals();
+        }
+
+        customerSelect.addEventListener(
+            "change",
+            updateDeliveryContact
+        );
+
+        addItemButton.addEventListener("click", function() {
+            const productId = Number(productSelect.value);
+            const quantity = Number(quantityInput.value);
+
+            if (!productId) {
+                showSalesStatus("Please select a product.", true);
+                return;
+            }
+
+            if (!Number.isInteger(quantity) || quantity <= 0) {
+                showSalesStatus(
+                    "Enter a valid whole-number quantity.", true
+                );
+                return;
+            }
+
+            const product = products.find(function(item) {
+                return Number(item.product_id) === productId;
+            });
+
+            if (!product) {
+                showSalesStatus("Selected product was not found.", true);
+                return;
+            }
+
+            const existing = cart.find(function(item) {
+                return Number(item.product_id) === productId;
+            });
+
+            const alreadyAdded = existing ? existing.quantity : 0;
+            const requestedQuantity = alreadyAdded + quantity;
+            const availableStock = Number(product.stock_quantity || 0);
+
+            if (
+                Number(product.track_stock) === 1 &&
+                requestedQuantity > availableStock
+            ) {
+                showSalesStatus(
+                    "Not enough stock for " + product.name +
+                    ". Available stock: " + availableStock,
+                    true
+                );
+                return;
+            }
+
+            if (existing) {
+                existing.quantity += quantity;
+            } else {
+                cart.push({
+                    product_id: product.product_id,
+                    name: product.name,
+                    price: Number(product.price),
+                    quantity: quantity
+                });
+            }
+
+            renderSaleItems();
+            quantityInput.value = "1";
+            showSalesStatus(product.name + " added to invoice.");
+        });
+
+        [discountInput, taxInput, amountPaidInput].forEach(function(input) {
+            input.addEventListener("input", calculateSaleTotals);
+        });
+
+        function clearDeliveryDetails() {
+            deliveryAddressInput.value = "";
+            deliveryLandmarkInput.value = "";
+            deliveryInstructionsInput.value = "";
+            updateDeliveryContact();
+        }
+
+        document.getElementById("clearSaleButton").addEventListener(
+            "click",
+            function() {
+                if (
+                    cart.length > 0 &&
+                    !confirm("Clear all products from this invoice?")
+                ) {
+                    return;
+                }
+
+                cart = [];
+                customerSelect.value = "";
+                quantityInput.value = "1";
+                discountInput.value = "0";
+                taxInput.value = "0";
+                amountPaidInput.value = "0";
+
+                clearDeliveryDetails();
+                renderSaleItems();
+                showSalesStatus("Invoice cleared.");
+            }
+        );
+
+        saveSaleButton.addEventListener("click", async function() {
+            if (savingSale) {
+                return;
+            }
+
+            const customerId = Number(customerSelect.value);
+
+            if (!customerId) {
+                showSalesStatus(
+                    "Please select a customer before saving.", true
+                );
+                return;
+            }
+
+            if (!deliveryAddressInput.value.trim()) {
+                showSalesStatus(
+                    "Please enter the delivery address.", true
+                );
+                deliveryAddressInput.focus();
+                return;
+            }
+
+            if (cart.length === 0) {
+                showSalesStatus(
+                    "Please add at least one product to the invoice.", true
+                );
+                return;
+            }
+
+            const totals = calculateSaleTotals();
+
+            if (
+                !validMoney(discountInput.value) ||
+                !validMoney(taxInput.value) ||
+                !validMoney(amountPaidInput.value)
+            ) {
+                showSalesStatus(
+                    "Discount, tax and amount paid must be non-negative numbers.",
+                    true
+                );
+                return;
+            }
+
+            if (totals.discount_amount > totals.subtotal) {
+                showSalesStatus(
+                    "Discount cannot be greater than the subtotal.", true
+                );
+                return;
+            }
+
+            if (totals.amount_paid > totals.total_amount) {
+                showSalesStatus(
+                    "Amount paid cannot be greater than the invoice total.",
+                    true
+                );
+                return;
+            }
+
+            const payload = {
+                customer_id: customerId,
+                items: cart.map(function(item) {
+                    return {
+                        product_id: item.product_id,
+                        quantity: item.quantity
+                    };
+                }),
+                discount_amount: totals.discount_amount,
+                tax_amount: totals.tax_amount,
+                amount_paid: totals.amount_paid,
+
+                // Delivery fields saved with the invoice by Flask.
+                delivery_address: deliveryAddressInput.value.trim(),
+                delivery_landmark:
+                    deliveryLandmarkInput.value.trim(),
+                delivery_instructions:
+                    deliveryInstructionsInput.value.trim()
+            };
+
+            savingSale = true;
+            saveSaleButton.disabled = true;
+            saveSaleButton.textContent = "Saving invoice...";
+
+            try {
+                const response = await fetch("/api/sales", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Could not save invoice."
+                    );
+                }
+
+                cart = [];
+                customerSelect.value = "";
+                quantityInput.value = "1";
+                discountInput.value = "0";
+                taxInput.value = "0";
+                amountPaidInput.value = "0";
+
+                clearDeliveryDetails();
+                renderSaleItems();
+                await loadSaleProducts();
+
+                showSalesStatus(
+                    "Invoice saved successfully. Invoice number: " +
+                    (result.invoice_number || result.sale_id || "Created")
+                );
+
+            } catch (error) {
+                showSalesStatus(error.message, true);
+                console.error("Invoice saving error:", error);
+            } finally {
+                savingSale = false;
+                saveSaleButton.disabled = false;
+                saveSaleButton.textContent = "Save invoice";
+            }
+        });
+
+        loadSaleCustomers();
+        loadSaleProducts();
+        renderSaleItems();
+    </script>
+</body>
+</html>
